@@ -130,7 +130,7 @@ def normalization(data, ntype):
     else:
       DC_component = np.mean(data)
       data = data - DC_component
-      return (data) / np.max(np.abs(data))
+      return (data)
 
 
 def concate_time(acc_t,acc_s,gyr_t,gyr_s):
@@ -150,7 +150,7 @@ def butter_filter(data,fs,fstop,btype):
     btype = 'highpass', 'lowpass'
     '''
     from scipy import signal
-    sos = signal.butter(6,fstop/fs,btype=btype,analog=False,fs = fs)
+    sos = signal.butter(4,fstop,btype=btype,analog=False,fs = fs,output='sos')
     filterd = signal.sosfilt(sos,data)
     return filterd
 
@@ -174,23 +174,28 @@ def time_stamp_alignment(acc_t,acc_s,gyr_t,gyr_s,Fs,oFs):
 
     acc_s_intp = np.interp(acc_t_intp,acc_t,acc_s)
     gyr_s_intp = np.interp(gyr_t_intp,gyr_t,gyr_s)
-    
+
     return acc_t_intp,acc_s_intp,gyr_t_intp,gyr_s_intp
 
-def segmentation(acc_s,gyr_s,Fs,oFs, thres_hold):
-  # Need to select axix with most energy
+def segmentation(acc_xyz,gyr_xyz,acc_t,gyr_t,Fs,oFs,thres_hold):
+    # Need to select axix with most energy
+    energy_acc =  np.linalg.norm(acc_xyz,axis=0,ord = 2)
+    energy_gyr = np.linalg.norm(gyr_xyz,axis=0,ord = 2)
+    acc_s = acc_xyz[:,np.argmax(energy_acc)]
+    gyr_s = gyr_xyz[:,1]
+    acc_s = normalization(acc_s,1)
+    gyr_s = normalization(gyr_s,1)
+    acc_s_f = scipy.signal.wiener(acc_s,noise = 0.0005)
+    gyr_s_f = scipy.signal.wiener(gyr_s,noise = 0.0005)
+    acc_t_intp,acc_s_intp,gyr_t_intp,gyr_s_intp = time_stamp_alignment(acc_t,acc_s_f,gyr_t,gyr_s_f,Fs,oFs)
+    multiplied_signal = acc_s_intp * acc_s_intp
 
-  acc_s_f = scipy.signal.wiener(acc_s,noise = None)
-  gyr_s_f = scipy.signal.wiener(gyr_s,noise = None)
-  acc_t_intp,acc_s_intp,gyr_t_intp,gyr_s_intp = time_stamp_alignment(acc_t,acc_s_f,gyr_t,gyr_s_f,Fs,oFs)
-  multiplied_signal = acc_s_intp * gyr_s_intp
-  import matplotlib.pyplot as plt
-  plt.plot(multiplied_signal)
-  plt.show()
-  
-  multiplied_signal_f = butter_filter(multiplied_signal,fs=oFs,fstop= 20,btype='highpass')
-  pass
-  
+    multiplied_signal_f = butter_filter(multiplied_signal,fs=oFs,fstop= 10,btype='lowpass')
+    import matplotlib.pyplot as plt 
+    plt.plot(multiplied_signal_f)
+    plt.show()
+    pass
+    
   
   # Do convolution
   
@@ -209,7 +214,7 @@ gyr_t,gyr_xyz = signal_read(gyr_PATH)
 acc_s = dimension_reduction(acc_xyz)
 gyr_s = dimension_reduction(gyr_xyz)
 
-segmentation(acc_xyz,gyr_xyz,400,2000,20)
+segmentation(acc_xyz,gyr_xyz,acc_t,gyr_t,400,2000,20)
 
 
 acc_t_intp,acc_s_intp,gyr_t_intp,gyr_s_intp = time_stamp_alignment(acc_t,acc_s,gyr_t,gyr_s,400,2000)
