@@ -4,6 +4,7 @@ import torch
 import torchaudio 
 from torchaudio import transforms 
 import numpy as np
+import scipy
 # from IPython.display import Audio 
  
 class AudioUtil(): 
@@ -98,49 +99,103 @@ def pre_processing_example(isMel_spec = True):
     plt.show()
     
 def signal_read(PATH):
-  with open(PATH,'r') as f:
-    acc_content = f.read()
+    with open(PATH,'r') as f:
+      acc_content = f.read()
 
-  import re
-  xyz_patt = re.compile(r'-?[0-9]\d*\.\d+|\d+') 
-  txyz = xyz_patt.findall(acc_content)
-  # print(type(txyz))
-  # print(len(txyz))
-  import numpy as np
-  txyz = np.asarray(txyz)
-  txyz = txyz.reshape(-1,4)
-  time = txyz[:,0].astype(np.int64)
-  position = txyz[:,1:4].astype(np.float64)
-  return time,position
+    import re
+    xyz_patt = re.compile(r'-?[0-9]\d*\.\d+|\d+') 
+    txyz = xyz_patt.findall(acc_content)
+    # print(type(txyz))
+    # print(len(txyz))
+    import numpy as np
+    txyz = np.asarray(txyz)
+    txyz = txyz.reshape(-1,4)
+    time = txyz[:,0].astype(np.int64)
+    position = txyz[:,1:4].astype(np.float64)
+    return time,position
 
 def dimension_reduction(xyz):
-  signal_shape = xyz.shape
-  s = np.zeros((signal_shape[0],1))
-  for i in range(signal_shape[0]):
-    _j = np.argmax(np.abs([xyz[i,0],xyz[i,1],xyz[i,2]]))
-    _sign = np.sign(xyz[i,_j])
-    s[i] = _sign * np.linalg.norm(xyz[i,:],ord = 2)
-  return s
+    signal_shape = xyz.shape
+    s = np.zeros((signal_shape[0],1))
+    for i in range(signal_shape[0]):
+      _j = np.argmax(np.abs([xyz[i,0],xyz[i,1],xyz[i,2]]))
+      _sign = np.sign(xyz[i,_j])
+      s[i] = _sign * np.linalg.norm(xyz[i,:],ord = 2)
+    return s
 
-def normalization(data):
+def normalization(data, ntype):
     _range = np.max(data) - np.min(data)
-    return (data - np.min(data)) / _range
+    if ntype == 0:
+      return (data - np.min(data)) / _range
+    else:
+      DC_component = np.mean(data)
+      data = data - DC_component
+      return (data) / np.max(np.abs(data))
+
 
 def concate_time(acc_t,acc_s,gyr_t,gyr_s):
-  base_time_stamp = min(np.min(acc_t),np.min(gyr_t))
-  acc_t = acc_t - base_time_stamp
-  gyr_t = gyr_t - base_time_stamp
-  _s = np.concatenate((acc_s,gyr_s))
-  _t = np.concatenate((acc_t,gyr_t))
-  _idx = np.argsort(_t)
-  # print(_idx)
-  t = _t[_idx]
-  s = _s[_idx]
-  return t,s
-  
-  # print(base_time_stamp)
-  return base_time_stamp
+    base_time_stamp = min(np.min(acc_t),np.min(gyr_t))
+    acc_t = acc_t - base_time_stamp
+    gyr_t = gyr_t - base_time_stamp
+    _s = np.concatenate((acc_s,gyr_s))
+    _t = np.concatenate((acc_t,gyr_t))
+    _idx = np.argsort(_t)
+    # print(_idx)
+    t = _t[_idx]
+    s = _s[_idx]
+    return t,s
 
+def butter_filter(data,fs,fstop,btype):
+    '''
+    btype = 'highpass', 'lowpass'
+    '''
+    from scipy import signal
+    sos = signal.butter(6,fstop/fs,btype=btype,analog=False,fs = fs)
+    filterd = signal.sosfilt(sos,data)
+    return filterd
+
+
+def time_stamp_alignment(acc_t,acc_s,gyr_t,gyr_s,Fs,oFs):
+    base_time_stamp = min(np.min(acc_t),np.min(gyr_t))
+    acc_t = acc_t - base_time_stamp
+    gyr_t = gyr_t - base_time_stamp
+    gyr_s = gyr_s.flatten()
+    acc_s = acc_s.flatten()
+    time_stamp_end = max(np.max(acc_t),np.max(gyr_t))
+    # Length of the signal
+    factor = int(np.ceil(oFs / Fs))
+    if len(acc_t) == len(gyr_t):
+        intp_length = factor * len(acc_t)
+    else:
+        intp_length = factor * int(np.ceil((len(acc_t) + len(gyr_t)) / 2))
+    # The interpolation takes the 0 to final value
+    acc_t_intp = np.linspace(0, time_stamp_end,intp_length)
+    gyr_t_intp =  np.linspace(0, time_stamp_end,intp_length)
+
+    acc_s_intp = np.interp(acc_t_intp,acc_t,acc_s)
+    gyr_s_intp = np.interp(gyr_t_intp,gyr_t,gyr_s)
+    
+    return acc_t_intp,acc_s_intp,gyr_t_intp,gyr_s_intp
+
+def segmentation(acc_s,gyr_s,Fs,oFs, thres_hold):
+  # Need to select axix with most energy
+
+  acc_s_f = scipy.signal.wiener(acc_s,noise = None)
+  gyr_s_f = scipy.signal.wiener(gyr_s,noise = None)
+  acc_t_intp,acc_s_intp,gyr_t_intp,gyr_s_intp = time_stamp_alignment(acc_t,acc_s_f,gyr_t,gyr_s_f,Fs,oFs)
+  multiplied_signal = acc_s_intp * gyr_s_intp
+  import matplotlib.pyplot as plt
+  plt.plot(multiplied_signal)
+  plt.show()
+  
+  multiplied_signal_f = butter_filter(multiplied_signal,fs=oFs,fstop= 20,btype='highpass')
+  pass
+  
+  
+  # Do convolution
+  
+  
+  
 # Open Acc and Gyro
 acc_PATH = "./data/acczero.txt"
 gyr_PATH = "./data/gyrzero.txt"
@@ -148,21 +203,40 @@ gyr_PATH = "./data/gyrzero.txt"
 acc_t,acc_xyz = signal_read(acc_PATH)
 gyr_t,gyr_xyz = signal_read(gyr_PATH)
 
+
 # Signal space reduction
 # import numpy as np
 acc_s = dimension_reduction(acc_xyz)
 gyr_s = dimension_reduction(gyr_xyz)
 
+segmentation(acc_xyz,gyr_xyz,400,2000,20)
+
+
+acc_t_intp,acc_s_intp,gyr_t_intp,gyr_s_intp = time_stamp_alignment(acc_t,acc_s,gyr_t,gyr_s,400,2000)
+
+
 # print(np.argmax(np.abs([-1,2,-5])))
 import matplotlib.pyplot as plt
-plt.plot(acc_s)
-# plt.plot(gyr_t)
+plt.figure
+plt.plot(gyr_s_intp)
 plt.show()
 
-import scipy
-# TODO: Need a noise power
-acc_s_f = scipy.signal.wiener(acc_s,noise = None)
-gyr_s_f = scipy.signal.wiener(gyr_s,noise = None)
+acc_s = normalization(acc_s,0)
+gyr_s = normalization(gyr_s,0)
+
+
+import matplotlib.pyplot as plt
+plt.figure
+plt.plot(gyr_s)
+plt.show()
+
+# import scipy
+# # TODO: Need a noise power
+# acc_s_f = scipy.signal.wiener(acc_s,noise = None)
+# gyr_s_f = scipy.signal.wiener(gyr_s,noise = None)
+
+
+
 
 # Wiener filterig reuslt display
 # import matplotlib.pyplot as plt
@@ -177,12 +251,12 @@ gyr_s_f = scipy.signal.wiener(gyr_s,noise = None)
 # plt.show()
 
 # Nomalize
-time,signal = concate_time(acc_t,acc_s_f,gyr_t,gyr_s_f)
+time,signal = concate_time(acc_t,acc_s,gyr_t,gyr_s)
 import matplotlib.pyplot as plt
-plt.plot(acc_s_f)
+
+plt.plot(signal)
+# plt.plot(gyr_t)
 plt.show()
-acc_s_f = normalization(acc_s_f)
-gyr_s_f = normalization(gyr_s_f)
 
 
 

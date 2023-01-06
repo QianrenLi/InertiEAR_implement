@@ -1,3 +1,5 @@
 {
-    "python.analysis.typeCheckingMode": "basic"
+    "python.analysis.typeCheckingMode": "basic",
+    
+    "editor.tabSize": 4 //默认是auto的，我改成了4
 }
