@@ -417,6 +417,7 @@ def read_data_from_path(path):
 
             segmentation_time = h_seg.segmentation(2000, noise_acc, noise_gyr)
             acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
+            print(type(acc_t_idx))
             signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t)
 
             if len(signal) == 5:
