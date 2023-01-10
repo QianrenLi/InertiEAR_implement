@@ -398,29 +398,33 @@ class segmentation_handle():
 
 
 def read_data_from_path(path):
+    valid_data_list = {}
     noise_acc, noise_gyr = noise_computation(path + "acc_1_999_999.txt", path + "gyr_1_999_999.txt")
 
     data_list = load_data.load_data_form_path(path)
     for key in data_list:
-        acc_path = data_list[key][0]
-        gyr_path = data_list[key][1]
+        try:
+            acc_path = data_list[key][0]
+            gyr_path = data_list[key][1]
 
-        acc_t, acc_xyz = signal_read(acc_path)
-        gyr_t, gyr_xyz = signal_read(gyr_path)
+            acc_t, acc_xyz = signal_read(acc_path)
+            gyr_t, gyr_xyz = signal_read(gyr_path)
 
-        acc_xyz = remove_mean_value(acc_xyz)
-        gyr_xyz = remove_mean_value(gyr_xyz)
+            acc_xyz = remove_mean_value(acc_xyz)
+            gyr_xyz = remove_mean_value(gyr_xyz)
 
-        h_seg = segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, 400)
+            h_seg = segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, 400)
 
-        segmentation_time = h_seg.segmentation(2000, noise_acc, noise_gyr)
-        acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
-        signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t)
+            segmentation_time = h_seg.segmentation(2000, noise_acc, noise_gyr)
+            acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
+            signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t)
 
-        if signal != 5:
-            print("out of 5: ", key)
+            if len(signal) == 5:
+                valid_data_list[key] = signal
+        except:
+            print("error_data: ", key)
 
-
+    return valid_data_list
 
 
 if __name__ == "__main__":
