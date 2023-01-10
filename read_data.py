@@ -305,20 +305,22 @@ class segmentation_handle():
         energy_acc =  np.linalg.norm(acc_xyz,axis=0,ord = 2)
         energy_gyr = np.linalg.norm(gyr_xyz,axis=0,ord = 2)
         
-        acc_s = acc_xyz[:,np.argmax(energy_acc)]
-        gyr_s = gyr_xyz[:,2]
+        acc_s = acc_xyz[:,1]
+        # gyr_s = gyr_xyz[:,0]
+        # hw
+        gyr_s = gyr_xyz[:,np.argmax(energy_gyr)]
 
         acc_s_f = scipy.signal.wiener(acc_s,noise = noise_acc[np.argmax(energy_acc)])
-        gyr_s_f = scipy.signal.wiener(gyr_s,noise = noise_gyr[2])
+        gyr_s_f = scipy.signal.wiener(gyr_s,noise = noise_gyr[np.argmax(energy_gyr)])
         
         # Image Dispaly
-        # import matplotlib.pyplot as plt 
-        # plt.subplot(2,1,1)
-        # plt.plot(acc_s_f)
+        import matplotlib.pyplot as plt 
+        plt.subplot(2,1,1)
+        plt.plot(gyr_s)
 
         # import matplotlib.pyplot as plt 
         # plt.plot(gyr_s_f)
-        # plt.show()
+        plt.show()
         
         acc_t_intp,acc_s_intp,gyr_t_intp,gyr_s_intp = self.time_stamp_alignment(acc_s_f,gyr_s_f,oFs)
         multiplied_signal = acc_s_intp * gyr_s_intp
@@ -391,12 +393,12 @@ print(noise_acc)
 print(noise_gyr)
 
 # Open Acc and Gyro
-acc_PATH = "./data/acczero4.txt"
-gyr_PATH = "./data/gyrzero4.txt"
+# acc_PATH = "./data/acczero4.txt"
+# gyr_PATH = "./data/gyrzero4.txt"
 
 # Open HW path
-# acc_PATH = "./hw_data/acczero2.txt"
-# gyr_PATH = "./hw_data/gyrzero2.txt"
+acc_PATH = "./hw_data/acczero.txt"
+gyr_PATH = "./hw_data/gyrzero.txt"
 
 acc_t,acc_xyz = signal_read(acc_PATH)
 gyr_t,gyr_xyz = signal_read(gyr_PATH)
@@ -453,12 +455,12 @@ for i in range(len(signal)):
 # plt.show()
 
 # Nomalize
-time,signal = concate_time(acc_t,acc_s,gyr_t,gyr_s)
-import matplotlib.pyplot as plt
+# time,signal = concate_time(acc_t,acc_s,gyr_t,gyr_s)
+# import matplotlib.pyplot as plt
 
-plt.plot(signal)
-# plt.plot(gyr_t)
-plt.show()
+# plt.plot(signal)
+# # plt.plot(gyr_t)
+# plt.show()
 
 
 
