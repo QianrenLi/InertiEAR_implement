@@ -148,8 +148,8 @@ def remove_mean_value(xyz_signal):
 
 def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,acc_noise, gyr_noise):
     '''
-  acc_t_idx : (,2) format
-  '''
+    acc_t_idx : (,2) format
+    '''
     acc_s = []
     gyr_s = []
     acc_t_idx = acc_t_idx.astype('int')
@@ -478,7 +478,7 @@ def read_data_from_path(path):
 
         acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
         # print(acc_t_idx)
-        signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t)
+        signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,noise_acc,noise_gyr)
         for i in range(len(signal)):
             import matplotlib.pyplot as plt
             plt.plot(signal[i])
