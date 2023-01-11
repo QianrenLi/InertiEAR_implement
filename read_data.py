@@ -22,13 +22,13 @@ class AudioUtil():
     # Generate a Spectrogram
     # ----------------------------
     @staticmethod
-    def spectro_gram(aud, n_mels=64, n_fft=128, hop_len=None):
+    def spectro_gram(aud, n_mels=64, n_fft=128,win_length= 64, hop_len=None):
         sig, sr = aud
         top_db = 70
 
         # spec has shape [channel, n_mels, time], where channel is mono, stereo etc 
         # spec = transforms.MelSpectrogram(sr, n_fft=n_fft, hop_length=hop_len, n_mels=n_mels)(sig) 
-        spec = transforms.Spectrogram(n_fft=n_fft, hop_length=hop_len, power=2)(sig)
+        spec = transforms.Spectrogram(n_fft=n_fft, hop_length=hop_len, power=2,win_length=win_length)(sig)
         # Convert to decibels 
         spec = transforms.AmplitudeToDB(top_db=top_db)(spec)
         return (spec)
@@ -146,7 +146,7 @@ def remove_mean_value(xyz_signal):
     return xyz_signal
 
 
-def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t):
+def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,acc_noise, gyr_noise):
     '''
   acc_t_idx : (,2) format
   '''
@@ -154,6 +154,12 @@ def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t):
     gyr_s = []
     acc_t_idx = acc_t_idx.astype('int')
     gyr_t_idx = gyr_t_idx.astype('int')
+
+    for i in range(3):
+        acc_xyz[:, i] = scipy.signal.wiener(acc_xyz[:, i] ,noise=acc_noise[i])
+        gyr_xyz[:, i] = scipy.signal.wiener(gyr_xyz[:, i] ,noise=gyr_noise[i])
+
+
     for i in range(len(acc_t_idx)):
         acc_s.append(normalization(dimension_reduction(acc_xyz[acc_t_idx[i, 0]:acc_t_idx[i, 1], :]), 0))
         gyr_s.append(normalization(dimension_reduction(gyr_xyz[gyr_t_idx[i, 0]:gyr_t_idx[i, 1], :]), 0))
