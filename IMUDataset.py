@@ -1,17 +1,15 @@
 from torch.utils.data import DataLoader, Dataset, random_split
 import torchaudio
 
-
 # ----------------------------
 # IMU Dataset
 # ----------------------------
 from data_loader import generate_signal, convert_to_spec, pad_trunc
 
 
-class SoundDS(Dataset):
-    def __init__(self, df, data_path):
+class IMUDS(Dataset):
+    def __init__(self, df):
         self.df = df
-        self.data_path = str(data_path)
         self.max_len = 1000
 
     # ----------------------------

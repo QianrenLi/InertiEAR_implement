@@ -13,7 +13,8 @@ def load_acc_data_with_label(path='./files_individual/files_0_1'):
     for file_name in os.listdir(path):
         if file_name.startswith("acc"):
             voice_number = file_name.replace(".txt", "").replace("acc_1_", "").replace("gyr_1_", "").split("_")[0]
-            if voice_number <= "1":
+            voice_number = int(voice_number)
+            if voice_number <= 1:
                 data_list[path + "/" + file_name] = voice_number
 
     return data_list
@@ -36,7 +37,7 @@ def pad_trunc(signal_aud, max_len):
         signal_aud = numpy.pad(signal_aud, (0, max_len - len(signal_aud)), 'constant')
     else:
         signal_aud = signal_aud[:max_len]
-    return signal_aud
+    return numpy.array(signal_aud)
 
 
 def generate_signal(acc_data_path, gyr_data_path):
