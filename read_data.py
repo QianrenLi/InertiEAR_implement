@@ -314,24 +314,7 @@ class segmentation_handle():
 
     def segmentation(self, oFs, noise_acc, noise_gyr):
         # Need to select axix with most energy
-<<<<<<< HEAD
-        
-        energy_acc =  np.linalg.norm(acc_xyz,axis=0,ord = 2)
-        energy_gyr = np.linalg.norm(gyr_xyz,axis=0,ord = 2)
-        
-        acc_s = acc_xyz[:,1]
-        # gyr_s = gyr_xyz[:,0]
-        # hw
-        gyr_s = gyr_xyz[:,np.argmax(energy_gyr)]
 
-        acc_s_f = scipy.signal.wiener(acc_s,noise = noise_acc[np.argmax(energy_acc)])
-        gyr_s_f = scipy.signal.wiener(gyr_s,noise = noise_gyr[np.argmax(energy_gyr)])
-        
-        # Image Dispaly
-        import matplotlib.pyplot as plt 
-        plt.subplot(2,1,1)
-        plt.plot(gyr_s)
-=======
 
         energy_acc = np.linalg.norm(self.acc_xyz, axis=0, ord=2)
         energy_gyr = np.linalg.norm(self.gyr_xyz, axis=0, ord=2)
@@ -339,26 +322,25 @@ class segmentation_handle():
         acc_s = self.acc_xyz[:, np.argmax(energy_acc)]
         gyr_s = self.gyr_xyz[:, np.argmax(energy_gyr)]
 
-        acc_s_f = scipy.signal.wiener(acc_s, noise=noise_acc[np.argmax(energy_acc)])
-        gyr_s_f = scipy.signal.wiener(gyr_s, noise=noise_gyr[np.argmax(energy_gyr)])
+        acc_s_f = scipy.signal.wiener(acc_s, noise=None)
+        gyr_s_f = scipy.signal.wiener(gyr_s, noise=None)
 
         # Image Dispaly
-        # import matplotlib.pyplot as plt
-        # plt.subplot(2,1,1)
-        # plt.plot(acc_s_f)
->>>>>>> 2c1b23c48c8ba27081cee0a4f1b09ba029cb6759
+        import matplotlib.pyplot as plt
+        plt.subplot(3,1,1)
+
 
         # import matplotlib.pyplot as plt
-        # plt.plot(gyr_s_f)
-<<<<<<< HEAD
-        plt.show()
-        
-        acc_t_intp,acc_s_intp,gyr_t_intp,gyr_s_intp = self.time_stamp_alignment(acc_s_f,gyr_s_f,oFs)
-=======
+        plt.plot(acc_s_f)
+        plt.subplot(3,1,2)
+
+
+        # import matplotlib.pyplot as plt
+        plt.plot(gyr_s_f)
+
         # plt.show()
 
         acc_t_intp, acc_s_intp, gyr_t_intp, gyr_s_intp = self.time_stamp_alignment(acc_s_f, gyr_s_f, oFs)
->>>>>>> 2c1b23c48c8ba27081cee0a4f1b09ba029cb6759
         multiplied_signal = acc_s_intp * gyr_s_intp
 
         # Image Dispaly
@@ -370,7 +352,8 @@ class segmentation_handle():
         multiplied_signal_f = signal_filter(multiplied_signal, fs=oFs, fstop=30, btype='highpass')
         multiplied_signal_f = scipy.signal.hilbert(multiplied_signal_f)
         power_signal = energy_calculation(np.abs(multiplied_signal_f), 300)
-        power_signal = 80 * normalization(power_signal, 0)
+        multiplied_signal_f = signal_filter(abs(multiplied_signal),fs=oFs, fstop= 15, btype='lowpass')
+        power_signal = 1000 * normalization(power_signal, 0)
 
         # Otus thresholding
         threshold = otus_implementation(1000, np.log(power_signal + 1))
@@ -380,11 +363,12 @@ class segmentation_handle():
         segmentation_time = acc_t_intp[segmentation_idx]
 
         # Paper filtering
-        # power_signal = signal_filter(multiplied_signal,fs=oFs,fstop= 20, btype='lowpass')
+        # power_signal = signal_filter(abs(multiplied_signal),fs=oFs, fstop= 20, btype='lowpass')
 
         # Image Dispaly
         import matplotlib.pyplot as plt
-        # plt.subplot(2,1,2)
+        plt.subplot(3,1,3)
+        # plt.plot(abs(np.log(normalization(multiplied_signal_f,0) + 1)))
         plt.plot(abs(np.log(power_signal + 1)))
         plt.show()
         return segmentation_time
@@ -406,21 +390,7 @@ class segmentation_handle():
             if idx == idx_length:
                 break
 
-<<<<<<< HEAD
-# Open Acc and Gyro
-# acc_PATH = "./data/acczero4.txt"
-# gyr_PATH = "./data/gyrzero4.txt"
 
-# Open HW path
-acc_PATH = "./hw_data/acczero.txt"
-gyr_PATH = "./hw_data/gyrzero.txt"
-
-acc_t,acc_xyz = signal_read(acc_PATH)
-gyr_t,gyr_xyz = signal_read(gyr_PATH)
-
-acc_xyz  = remove_mean_value(acc_xyz)
-gyr_xyz  = remove_mean_value(gyr_xyz)
-=======
         idx = 0
         for j in range(len(gyr_t)):
             if gyr_t[j] >= segmentation_time[idx]:
@@ -435,7 +405,7 @@ gyr_xyz  = remove_mean_value(gyr_xyz)
             gyr_t_idx[-1] = len(gyr_t) - 1
 
         return np.reshape(acc_t_idx, (-1, 2)), np.reshape(gyr_t_idx, (-1, 2))
->>>>>>> 2c1b23c48c8ba27081cee0a4f1b09ba029cb6759
+
 
 
 def read_data_from_path(path):
@@ -448,6 +418,9 @@ def read_data_from_path(path):
             acc_path = data_list[key][0]
             gyr_path = data_list[key][1]
 
+            acc_path = path + "acc_1_1_50.txt"
+            gyr_path = path + "gyr_1_1_50.txt"
+            
             acc_t, acc_xyz = signal_read(acc_path)
             gyr_t, gyr_xyz = signal_read(gyr_path)
 
@@ -471,60 +444,6 @@ def read_data_from_path(path):
 if __name__ == "__main__":
     path = "./files_0_4/files/"
     read_data_from_path(path)
-
-<<<<<<< HEAD
-
-
-# print(np.argmax(np.abs([-1,2,-5])))
-# import matplotlib.pyplot as plt
-# plt.figure
-# plt.plot(gyr_s_intp)
-# plt.show()
-
-
-signal = pre_processing(acc_xyz,gyr_xyz,acc_t_idx,gyr_t_idx,acc_t,gyr_t)
-
-for i in range(len(signal)):
-  import matplotlib.pyplot as plt
-  plt.figure
-  plt.plot(signal[i])
-  plt.show()
-
-# import scipy
-# # TODO: Need a noise power
-# acc_s_f = scipy.signal.wiener(acc_s,noise = None)
-# gyr_s_f = scipy.signal.wiener(gyr_s,noise = None)
-
-
-
-
-# Wiener filterig reuslt display
-# import matplotlib.pyplot as plt
-# plt.subplot(2,2,1)
-# plt.plot(acc_s)
-# plt.subplot(2,2,2)
-# plt.plot(acc_s_f)
-# plt.subplot(2,2,3)
-# plt.plot(gyr_s)
-# plt.subplot(2,2,4)
-# plt.plot(gyr_s_f)
-# plt.show()
-
-# Nomalize
-# time,signal = concate_time(acc_t,acc_s,gyr_t,gyr_s)
-# import matplotlib.pyplot as plt
-
-# plt.plot(signal)
-# # plt.plot(gyr_t)
-# plt.show()
-
-
-
-
-# pre_processing_example(isMel_spec= False)
-# print(type(sgram.numpy()))
-# print(sgram)
-=======
     # noise_acc, noise_gyr = noise_computation("./files_0_4/files/acc_1_999_999.txt", "./files_0_4/files/gyr_1_999_999.txt")
     #
     # # Open Acc and Gyro
@@ -601,4 +520,4 @@ for i in range(len(signal)):
     # # pre_processing_example(isMel_spec= False)
     # # print(type(sgram.numpy()))
     # # print(sgram)
->>>>>>> 2c1b23c48c8ba27081cee0a4f1b09ba029cb6759
+
