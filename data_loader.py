@@ -31,9 +31,17 @@ def get_silence_noise(acc_noise="./files_individual/noise/acc_1_999_999.txt",
     return acc_noise, gyr_noise
 
 
-def generate_signal(acc_path, gyr_path):
-    acc_t, acc_xyz = signal_read(acc_path)
-    gyr_t, gyr_xyz = signal_read(gyr_path)
+def pad_trunc(signal_aud, max_len):
+    if len(signal_aud) < max_len:
+        signal_aud = numpy.pad(signal_aud, (0, max_len - len(signal_aud)), 'constant')
+    else:
+        signal_aud = signal_aud[:max_len]
+    return signal_aud
+
+
+def generate_signal(acc_data_path, gyr_data_path):
+    acc_t, acc_xyz = signal_read(acc_data_path)
+    gyr_t, gyr_xyz = signal_read(gyr_data_path)
 
     acc_xyz = remove_mean_value(acc_xyz)
     gyr_xyz = remove_mean_value(gyr_xyz)
@@ -50,19 +58,22 @@ def convert_to_spec(signal):
     signal = torch.Tensor([signal])
     sgram = read_data.AudioUtil.spectro_gram((signal, 800))
     sgram_numpy = sgram.numpy()
-    print(sgram_numpy.shape)
+    sgram_tensor = torch.Tensor(sgram_numpy)
+    # print(sgram_numpy.shape)
     # plt.imshow(sgram_numpy.transpose(1, 2, 0))
     # plt.show()
-    return sgram_numpy
+    return sgram_tensor
 
 
 if __name__ == '__main__':
     acc_data_list = load_acc_data_with_label()
     i = 0
+    max_s_len = 0
+    average_s_len = 0
+    total_s_len = 0
     for acc_path, label in acc_data_list.items():
         gyr_path = get_corresponding_gyr_path(acc_path)
-        # generate_signal(acc_path, gyr_path)
-        convert_to_spec(generate_signal(acc_path, gyr_path))
-        i = i + 1
-        if i > 10:
-            break
+        signal = generate_signal(acc_path, gyr_path)
+        signal = pad_trunc(signal, 1000)
+        sgram = convert_to_spec(signal)
+        print(sgram.shape)

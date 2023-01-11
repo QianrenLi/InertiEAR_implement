@@ -5,13 +5,14 @@ import torchaudio
 # ----------------------------
 # IMU Dataset
 # ----------------------------
-from data_loader import generate_signal, convert_to_spec
+from data_loader import generate_signal, convert_to_spec, pad_trunc
 
 
 class SoundDS(Dataset):
     def __init__(self, df, data_path):
         self.df = df
         self.data_path = str(data_path)
+        self.max_len = 1000
 
     # ----------------------------
     # Number of items in dataset
@@ -32,15 +33,7 @@ class SoundDS(Dataset):
         acc_path = imu_data_files[0]
         gyr_path = imu_data_files[1]
         signal = generate_signal(acc_path, gyr_path)
+        signal = pad_trunc(signal, self.max_len)
         sgram = convert_to_spec(signal)
-
-        aud = AudioUtil.open(audio_file)
-        # re_noise_aud = AudioUtil.denoise(aud)
-        re_channel = AudioUtil.rechannel(aud, self.channel)
-
-        dur_aud = AudioUtil.pad_trunc(re_channel, self.duration)
-        shift_aud = AudioUtil.time_shift(dur_aud, self.shift_pct)
-        sgram = AudioUtil.spectro_gram(shift_aud, n_mels=64, n_fft=1024, hop_len=None)
-        aug_sgram = AudioUtil.spectro_augment(sgram, max_mask_pct=0.1, n_freq_masks=2, n_time_masks=2)
 
         return sgram, class_id
