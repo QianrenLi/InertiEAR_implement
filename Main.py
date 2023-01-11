@@ -5,6 +5,7 @@ from torch.utils.data import random_split
 
 from IMUClassifier import IMUClassifier
 from IMUDataset import IMUDS
+from ResNet import resnet18
 from TrainUtil import training, inference
 from data_loader import load_acc_data_with_label, get_corresponding_gyr_path
 
@@ -40,13 +41,14 @@ if __name__ == "__main__":
     val_dl = torch.utils.data.DataLoader(val_ds, batch_size=8, shuffle=False)
 
     # set up model
-    myModel = IMUClassifier()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
+
+    myModel = resnet18()
     myModel = myModel.to(device)
 
     # Training Model
-    num_epochs = 30
+    num_epochs = 10
     training(myModel, train_dl, val_dl, num_epochs)
 
     # Inference
