@@ -16,13 +16,12 @@ def load_acc_data_with_label(path='./files_individual/files_0_1'):
             if voice_number <= "1":
                 data_list[path + "/" + file_name] = voice_number
 
-
     return data_list
 
 
-def get_corresponding_gyr_path(acc_path):
-    gyr_path = acc_path.replace("acc", "gyr")
-    return gyr_path
+def get_corresponding_gyr_path(acc_data_path):
+    gyr_data_path = acc_data_path.replace("acc", "gyr")
+    return gyr_data_path
 
 
 def get_silence_noise(acc_noise="./files_individual/noise/acc_1_999_999.txt",
@@ -46,14 +45,15 @@ def generate_signal(acc_path, gyr_path):
     signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t)
     return signal[0]
 
+
 def convert_to_spec(signal):
     signal = torch.Tensor([signal])
     sgram = read_data.AudioUtil.spectro_gram((signal, 800))
     sgram_numpy = sgram.numpy()
-    spec_shape = sgram_numpy.shape
-    print(spec_shape)
-    plt.imshow(sgram_numpy.transpose(1, 2, 0))
-    plt.show()
+    print(sgram_numpy.shape)
+    # plt.imshow(sgram_numpy.transpose(1, 2, 0))
+    # plt.show()
+    return sgram_numpy
 
 
 if __name__ == '__main__':
