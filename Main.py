@@ -50,6 +50,7 @@ if __name__ == "__main__":
     # myModel = IMUClassifier()
     # Use ResNet
     myModel = resnet18()
+    myModel = torch.load("model/res_net.pth")
     myModel = myModel.to(device)
 
     # Training Model
@@ -58,4 +59,4 @@ if __name__ == "__main__":
 
     # Inference
     inference(myModel, val_dl)
-    torch.save(myModel,"model/cnn_net.pth")
+    torch.save(myModel,"model/res_net.pth")
