@@ -5,19 +5,40 @@ import numpy
 import torch
 
 import read_data
-from read_data import signal_read, remove_mean_value, segmentation_handle, pre_processing
+from read_data import signal_read, remove_mean_value, segmentation_handle, pre_processing,noise_computation
 
 
 def load_acc_data_with_label(paths):
     data_dict = {}
+    noise_acc, noise_gyr = noise_computation("./files_individual/noise/acc_1_999_999.txt", "./files_individual/noise/gyr_1_999_999.txt")
     for path in paths:
         for cur_file_name in os.listdir(path):
             if cur_file_name.startswith("acc"):
                 voice_number = cur_file_name.replace(".txt", "").replace("acc_1_", "").replace("gyr_1_", "").split("_")[0]
                 voice_number = int(voice_number)
-                if voice_number <= 9:
-                    data_dict[path + "/" + cur_file_name] = voice_number
+                try:
+                    acc_path = path + "/" + cur_file_name
+                    gyr_path = path + "/" + cur_file_name.replace("acc_1_","gyr_1_")
+                    # print(gyr_path)
+                    acc_t, acc_xyz = signal_read(acc_path)
+                    gyr_t, gyr_xyz = signal_read(gyr_path)
+                    
+                    
+                    acc_xyz = remove_mean_value(acc_xyz)
+                    gyr_xyz = remove_mean_value(gyr_xyz)
 
+                    h_seg = segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, 400)
+
+                    segmentation_time = h_seg.segmentation(2000, noise_acc, noise_gyr)
+
+                    acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
+                    # print(acc_t_idx)
+                    seg_signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,noise_acc,noise_gyr)
+                    if voice_number <= 9 and len(seg_signal) == 1:
+                        data_dict[path + "/" + cur_file_name] = voice_number
+                except:
+                    print("error_data: ", path + "/" + cur_file_name)
+                # print(path + "/" + cur_file_name)
     return data_dict
 
 
@@ -48,11 +69,13 @@ def generate_signal(acc_data_path, gyr_data_path, acc_noise, gyr_noise):
     gyr_xyz = remove_mean_value(gyr_xyz)
 
     h_seg = segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, 400)
+    segmentation_time = h_seg.segmentation(2000, acc_noise, gyr_noise)
 
-    acc_t_idx = numpy.array([[0, -1]])
-    gyr_t_idx = numpy.array([[0, -1]])
-
+    acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
+    # acc_t_idx = numpy.array([[0, -1]])
+    # gyr_t_idx = numpy.array([[0, -1]])
     signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t, acc_noise, gyr_noise)
+
     return signal[0]
 
 

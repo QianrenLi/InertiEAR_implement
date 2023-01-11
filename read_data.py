@@ -4,6 +4,7 @@ import torchaudio
 from torchaudio import transforms
 import numpy as np
 import scipy
+from scipy import signal
 
 # from IPython.display import Audio
 import load_data
@@ -128,15 +129,19 @@ def dimension_reduction(xyz):
 
 
 def normalization(data, ntype):
-    _range = np.max(data) - np.min(data)
-    if ntype == 0:
-        return (data - np.min(data)) / _range
+    if len(data) > 0:
+        _range = np.max(data) - np.min(data)
+        if _range != 0:
+            if ntype == 0:
+                return (data - np.min(data)) / _range
+            else:
+                DC_component = np.mean(data)
+                data = data - DC_component
+                _max = np.max(np.abs(data))
+                return (data / _max)
+        return data
     else:
-        DC_component = np.mean(data)
-        data = data - DC_component
-        _max = np.max(np.abs(data))
-        return (data / _max)
-
+        return data
 
 def remove_mean_value(xyz_signal):
     for i in range(3):
@@ -162,15 +167,15 @@ def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,acc_nois
     gyr_t_idx = gyr_t_idx.astype('int')
 
     for i in range(3):
-        acc_xyz[:, i] = scipy.signal.wiener(acc_xyz[:, i] ,noise=acc_noise[i])
-        gyr_xyz[:, i] = scipy.signal.wiener(gyr_xyz[:, i] ,noise=gyr_noise[i])
+        acc_xyz[:, i] = signal.wiener(acc_xyz[:, i] ,noise=acc_noise[i])
+        gyr_xyz[:, i] = signal.wiener(gyr_xyz[:, i] ,noise=gyr_noise[i])
 
 
     for i in range(len(acc_t_idx)):
         acc_s.append(normalization(dimension_reduction(acc_xyz[acc_t_idx[i, 0]:acc_t_idx[i, 1], :]), 0))
         gyr_s.append(normalization(dimension_reduction(gyr_xyz[gyr_t_idx[i, 0]:gyr_t_idx[i, 1], :]), 0))
 
-    signal = []
+    out_signal = []
     for i in range(len(acc_s)):
         _, t_s = concate_time(acc_t[acc_t_idx[i, 0]:acc_t_idx[i, 1]], acc_s[i], gyr_t[gyr_t_idx[i, 0]:gyr_t_idx[i, 1]],
                               gyr_s[i])
@@ -178,9 +183,9 @@ def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,acc_nois
         # High frequency suppression
         t_s = high_frequency_suppression(t_s,800)
         # print(t_s)
-        signal.append(t_s)
+        out_signal.append(t_s)
 
-    return signal
+    return out_signal
 
 
 def concate_time(acc_t, acc_s, gyr_t, gyr_s):
@@ -259,8 +264,8 @@ def otus_implementation(Fs, energy_signal):
     return np.argmax(variance_hist) * precision
 
 
-def segmentation_correct(signal, threshold, duration_threshold, window_size, extend_region):
-    index = signal < threshold
+def segmentation_correct(seg_signal, threshold, duration_threshold, window_size, extend_region):
+    index = seg_signal < threshold
     diff_idx = np.diff(index.astype(float))
     cross_idx = np.nonzero(diff_idx)
     cross_idx = cross_idx[0]
@@ -272,30 +277,53 @@ def segmentation_correct(signal, threshold, duration_threshold, window_size, ext
             cross_idx = np.insert(cross_idx, 0, 0)
         # pad back
         else:
-            cross_idx = np.insert(cross_idx, len(cross_idx), len(signal) - 1)
+            cross_idx = np.insert(cross_idx, len(cross_idx), len(seg_signal) - 1)
             
     
     segmented_idx = np.array(cross_idx)
 
     # remove peak with hard threshold and return the detection works or not
+    _idx_delete = []
     if len(segmented_idx) > 2:
-        for i in range(int(len(cross_idx) / 2)):
-            if (cross_idx[2 * i+1] - cross_idx[2 * i]) < duration_threshold or np.mean(
-                    signal[cross_idx[2 * i + 1]:cross_idx[2 * i + 2]]) > 0.8 * threshold:
-                    segmented_idx = np.delete(segmented_idx,[2 * i,2*i+1] )
-                    print(segmented_idx)
-            
+
         for i in range(int(len(segmented_idx) / 2)):
             if segmented_idx[2 * i] - extend_region > 0:
                 segmented_idx[2 * i] = segmented_idx[2 * i] - extend_region
-            if segmented_idx[2 * i + 1] + extend_region < len(signal) - 1:
+            if segmented_idx[2 * i + 1] + extend_region < len(seg_signal) - 1:
                 segmented_idx[2 * i + 1] = segmented_idx[2 * i + 1] + extend_region
                 
     
     for i in range(len(segmented_idx)):
-        if segmented_idx[i] - 0.5 * window_size > 0 and segmented_idx[i] != len(signal) - 1:
+        if segmented_idx[i] - 0.5 * window_size > 0 and segmented_idx[i] != len(seg_signal) - 1:
             segmented_idx[i] = segmented_idx[i] - 0.5 * window_size
-            
+
+    if len(segmented_idx) > 2:
+        for i in range(int(len(cross_idx) / 2)):
+            if (cross_idx[2 * i+1] - cross_idx[2 * i]) < duration_threshold or np.mean(
+                    seg_signal[cross_idx[2 * i ]:cross_idx[2 * i + 1]]) < 0.2 * threshold:
+                    _idx_delete.append(2 * i)
+                    _idx_delete.append(2 * i + 1)
+        if len(_idx_delete) > 0:
+            segmented_idx = np.delete(segmented_idx,_idx_delete)
+        # print(segmented_idx)
+        _idx_delete = []
+        for i in range(int(len(segmented_idx) / 2)  - 1):
+            if (segmented_idx[2 * i+2] - segmented_idx[2 * i + 1]) < duration_threshold or np.mean(
+                    seg_signal[segmented_idx[2 * i +1]:segmented_idx[2 * i + 2]]) > 0.8 * threshold:
+                    _idx_delete.append(2 * i + 1)
+                    _idx_delete.append(2 * i + 2)
+
+        if len(_idx_delete) > 0:
+            segmented_idx = np.delete(segmented_idx,_idx_delete)
+    _idx_delete = []
+    for i in range(len(segmented_idx) - 2):
+        if segmented_idx[i+2] <= segmented_idx[i+1]:
+            _idx_delete.append(i+1)
+            _idx_delete.append(i+2)
+
+    if len(_idx_delete) > 0:
+        segmented_idx = np.delete(segmented_idx,_idx_delete)
+
     # print(segmented_idx)
     return segmented_idx
 
@@ -331,12 +359,13 @@ class segmentation_handle():
         else:
             intp_length = factor * int(np.ceil((len(acc_t) + len(gyr_t)) / 2))
         # The interpolation takes the 0 to final value
-        acc_t_intp = np.linspace(max(np.min(acc_t), np.min(gyr_t)), time_stamp_end, intp_length)
+        shrink_factor = 0
+        acc_t_intp = np.linspace(max(np.min(acc_t), np.min(gyr_t)) , time_stamp_end, intp_length)
         gyr_t_intp = np.linspace(max(np.min(acc_t), np.min(gyr_t)), time_stamp_end, intp_length)
         
-        acc_intp_handle = scipy.interpolate.interp1d(acc_t,acc_s)
-        gyr_intp_handle = scipy.interpolate.interp1d(gyr_t,gyr_s)
-        
+        acc_intp_handle = scipy.interpolate.PchipInterpolator(acc_t,acc_s)
+        gyr_intp_handle = scipy.interpolate.PchipInterpolator(gyr_t,gyr_s)
+
         acc_s_intp = acc_intp_handle(acc_t_intp)
         gyr_s_intp = gyr_intp_handle(gyr_t_intp)
 
@@ -351,24 +380,30 @@ class segmentation_handle():
         acc_s = self.acc_xyz[:, np.argmax(energy_acc)]
         gyr_s = self.gyr_xyz[:, np.argmax(energy_gyr)]
 
-        acc_s_f = scipy.signal.wiener(acc_s, noise=None)
-        gyr_s_f = scipy.signal.wiener(gyr_s, noise=None)
+        acc_s_f = signal.wiener(acc_s, noise=None)
+        gyr_s_f = signal.wiener(gyr_s, noise=None)
         
 
         acc_t_intp, acc_s_intp, gyr_t_intp, gyr_s_intp = self.time_stamp_alignment(acc_s_f, gyr_s_f, 400)
 
         multiplied_signal = gyr_s_intp * acc_s_intp 
         
-
+        
         # signal preprocessing
         multiplied_signal_f = signal_filter(multiplied_signal, fs=oFs, fstop=30, btype='highpass')
-        multiplied_signal_f = scipy.signal.hilbert(multiplied_signal_f)
-        power_signal = energy_calculation(np.abs(multiplied_signal_f), 50)
-        power_signal = 1000 * normalization(power_signal, 0)
+        multiplied_signal_f = signal.hilbert(multiplied_signal_f)
+        power_signal = energy_calculation(np.abs(multiplied_signal_f), 100)
+        power_signal = 100 * normalization(power_signal, 0)
         # Otus thresholding
         threshold = otus_implementation(1000, np.log(power_signal + 1))
+        # import matplotlib.pyplot as plt
+        # plt.subplot(2,1,2)
+        # plt.plot(np.log(power_signal + 1))
+        # plt.subplot(2,1,1)
+        # plt.plot(multiplied_signal)
+        # plt.show()
         # Correction segmentation
-        segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, 50, 50, 0.05 * oFs)
+        segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, 100, 50, 0.3 * oFs)
         segmentation_time = acc_t_intp[segmentation_idx]
         # Paper filtering
         # power_signal = signal_filter(multiplied_signal,fs=oFs,fstop= 20, btype='lowpass')
@@ -411,12 +446,11 @@ class segmentation_handle():
 
 def read_data_from_path(path):
     valid_data_list = {}
-    noise_acc, noise_gyr = noise_computation("./data_test/acc_1_999_999.txt", "./data_test/gyr_1_999_999.txt")
+    noise_acc, noise_gyr = noise_computation("./files_individual/noise/acc_1_999_999.txt", "./files_individual/noise/gyr_1_999_999.txt")
 
     data_list = load_data.load_data_form_path(path)
 
     for key in data_list:
-
         try:
             acc_path = data_list[key][0]
             gyr_path = data_list[key][1]
@@ -434,11 +468,16 @@ def read_data_from_path(path):
 
             acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
             # print(acc_t_idx)
-            signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,noise_acc,noise_gyr)
-
-            
-        # if len(signal) == 5:
-        #     valid_data_list[key] = signal
+            seg_signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,noise_acc,noise_gyr)
+            # if len(seg_signal) != 1:
+            #     print(acc_t_idx)
+            #     for i in range(len(seg_signal)):
+            #         import matplotlib.pyplot as plt
+            #         plt.plot(seg_signal[i])
+            #         plt.show()
+                # print(len(seg_signal))
+            if len(seg_signal) == 1:
+                valid_data_list[key] = seg_signal
         except:
             print("error_data: ", key)
 
@@ -446,9 +485,10 @@ def read_data_from_path(path):
 
 
 if __name__ == "__main__":
-    path = "./files_0_1/"
-    import os
-    os.environ['KMP_DUPLICATE_LIB_OK']='True'
+    # path = "./files_individual/files_0_1/"
+    path = "./files_individual/files_2_4_6_8/"
+    # import os
+    # os.environ['KMP_DUPLICATE_LIB_OK']='True'
     # path = "./data_test/"
     read_data_from_path(path)
 

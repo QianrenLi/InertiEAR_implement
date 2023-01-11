@@ -47,14 +47,15 @@ if __name__ == "__main__":
     print(device)
 
     # Use CNN
-    myModel = IMUClassifier()
+    # myModel = IMUClassifier()
     # Use ResNet
-    # myModel = resnet18()
+    myModel = resnet18()
     myModel = myModel.to(device)
 
     # Training Model
-    num_epochs = 10
+    num_epochs = 15
     training(myModel, train_dl, val_dl, num_epochs)
 
     # Inference
     inference(myModel, val_dl)
+    torch.save(myModel,"model/cnn_net.pth")
