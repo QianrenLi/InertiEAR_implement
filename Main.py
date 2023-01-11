@@ -12,7 +12,7 @@ from data_loader import load_acc_data_with_label, get_corresponding_gyr_path
 from read_data import noise_computation
 
 if __name__ == "__main__":
-    paths = ["files_individual/files_2_4_6_8", "files_individual/files_0_1"]
+    paths = ["files_individual/files_2_4_6_8", "files_individual/files_0_1", "files_individual/files_3_5_7_9"]
 
     samples = []
     labels = []
@@ -51,12 +51,11 @@ if __name__ == "__main__":
     # myModel = IMUClassifier()
     # Use ResNet
     myModel = resnet18()
-    myModel = torch.load("model/res_net.pth")
 
     myModel = myModel.to(device)
 
     # Training Model
-    num_epochs = 10
+    num_epochs = 30
     training(myModel, train_dl, val_dl, num_epochs)
 
     # Inference
