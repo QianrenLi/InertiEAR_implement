@@ -145,6 +145,12 @@ def remove_mean_value(xyz_signal):
 
     return xyz_signal
 
+def high_frequency_suppression(clean_sig,fs):
+    '''
+    fs: sampling frequency (after doubling )
+    '''
+    clean_sig = signal_filter(clean_sig, fs= fs, fstop=80, btype='highpass')
+    return clean_sig
 
 def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,acc_noise, gyr_noise):
     '''
@@ -168,6 +174,9 @@ def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,acc_nois
     for i in range(len(acc_s)):
         _, t_s = concate_time(acc_t[acc_t_idx[i, 0]:acc_t_idx[i, 1]], acc_s[i], gyr_t[gyr_t_idx[i, 0]:gyr_t_idx[i, 1]],
                               gyr_s[i])
+        
+        # High frequency suppression
+        t_s = high_frequency_suppression(t_s,800)
         # print(t_s)
         signal.append(t_s)
 
@@ -426,7 +435,8 @@ def read_data_from_path(path):
             acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
             # print(acc_t_idx)
             signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,noise_acc,noise_gyr)
-        
+
+            
         # if len(signal) == 5:
         #     valid_data_list[key] = signal
         except:
