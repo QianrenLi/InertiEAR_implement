@@ -6,6 +6,38 @@
 
 import torch
 import torch.nn as nn
+from torch.nn import functional as F
+class Residual(nn.Module):
+    def __init__(self, in_channel, out_channel, use_1x1Conv=False, strides=1):
+        super().__init__()
+        self.conv1 = nn.Conv2d(in_channel, out_channel, kernel_size=3, padding=1, stride=strides)
+        self.bn1 = nn.BatchNorm2d(out_channel)
+        self.conv2 = nn.Conv2d(out_channel, out_channel, kernel_size=3, padding=1)
+        self.bn2 = nn.BatchNorm2d(out_channel)
+
+        if use_1x1Conv:
+            self.conv3 = nn.Conv2d(in_channel, out_channel, kernel_size=1, stride=strides)
+        else:
+            self.conv3 = None
+
+    def forward(self, X):
+        out = F.relu(self.bn1(self.conv1(X)))
+        out = self.bn2(self.conv2(out))
+        if self.conv3:
+            X = self.conv3(X)
+        out += X
+        return F.relu(out)
+
+def residualBlock(in_channel, out_channel, num_residuals, first_block=False):
+    blks = []
+    for i in range(num_residuals):
+        if i==0 and not first_block:
+            blks.append(Residual(in_channel, out_channel, use_1x1Conv=True,
+            strides=2))
+        else:
+            blks.append(Residual(out_channel, out_channel))
+    
+    return blks
 
 
 class BasicBlock(nn.Module):
