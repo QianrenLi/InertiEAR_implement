@@ -26,11 +26,10 @@ def get_corresponding_gyr_path(acc_data_path):
     return gyr_data_path
 
 
-def get_silence_noise(acc_noise="./files_individual/noise/acc_1_999_999.txt",
-                      gyr_noise="./files_individual/noise/gyr_1_999_999.txt"):
-    acc_noise = acc_noise.replace("acc", "silence")
-    gyr_noise = gyr_noise.replace("gyr", "silence")
-    return acc_noise, gyr_noise
+def get_silence_noise(acc_noise_path="./files_individual/noise/acc_1_999_999.txt",
+                      gyr_noise_path="./files_individual/noise/gyr_1_999_999.txt"):
+    noise_acc, noise_gyr = read_data.noise_computation(acc_noise_path, gyr_noise_path)
+    return noise_acc, noise_gyr
 
 
 def pad_trunc(signal_aud, max_len):
@@ -41,7 +40,7 @@ def pad_trunc(signal_aud, max_len):
     return numpy.array(signal_aud)
 
 
-def generate_signal(acc_data_path, gyr_data_path):
+def generate_signal(acc_data_path, gyr_data_path, acc_noise, gyr_noise):
     acc_t, acc_xyz = signal_read(acc_data_path)
     gyr_t, gyr_xyz = signal_read(gyr_data_path)
 
@@ -52,7 +51,8 @@ def generate_signal(acc_data_path, gyr_data_path):
 
     acc_t_idx = numpy.array([[0, -1]])
     gyr_t_idx = numpy.array([[0, -1]])
-    signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t)
+
+    signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t, acc_noise, gyr_noise)
     return signal[0]
 
 

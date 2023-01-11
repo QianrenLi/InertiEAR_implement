@@ -8,6 +8,7 @@ from IMUDataset import IMUDS
 from ResNet import resnet18
 from TrainUtil import training, inference
 from data_loader import load_acc_data_with_label, get_corresponding_gyr_path
+from read_data import noise_computation
 
 if __name__ == "__main__":
     paths = ["files_individual/files_2_4_6_8", "files_individual/files_0_1"]
@@ -27,8 +28,9 @@ if __name__ == "__main__":
 
     print(df.head(5))
 
-    data_path = ""
-    imu_ds = IMUDS(df)
+    noise_path = "files_individual/noise/"
+    noise_acc, noise_gyr = noise_computation(noise_path + "acc_1_999_999.txt", noise_path + "gyr_1_999_999.txt")
+    imu_ds = IMUDS(df, noise_acc, noise_gyr)
 
     # Random split of 80:20 between training and validation
     num_items = len(imu_ds)
@@ -44,7 +46,7 @@ if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
 
-    myModel = resnet18()
+    myModel = IMUClassifier()
     myModel = myModel.to(device)
 
     # Training Model

@@ -4,13 +4,15 @@ import torchaudio
 # ----------------------------
 # IMU Dataset
 # ----------------------------
-from data_loader import generate_signal, convert_to_spec, pad_trunc
+from data_loader import generate_signal, convert_to_spec, pad_trunc, get_silence_noise
 
 
 class IMUDS(Dataset):
-    def __init__(self, df):
+    def __init__(self, df, acc_noise, gyr_noise):
         self.df = df
         self.max_len = 1000
+        self.acc_noise = acc_noise
+        self.gyr_noise = gyr_noise
 
     # ----------------------------
     # Number of items in dataset
@@ -30,7 +32,7 @@ class IMUDS(Dataset):
 
         acc_path = imu_data_files[0]
         gyr_path = imu_data_files[1]
-        signal = generate_signal(acc_path, gyr_path)
+        signal = generate_signal(acc_path, gyr_path, self.acc_noise, self.gyr_noise)
         signal = pad_trunc(signal, self.max_len)
         sgram = convert_to_spec(signal)
 

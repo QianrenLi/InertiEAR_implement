@@ -146,7 +146,7 @@ def remove_mean_value(xyz_signal):
     return xyz_signal
 
 
-def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t):
+def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,acc_noise, gyr_noise):
     '''
   acc_t_idx : (,2) format
   '''
@@ -154,6 +154,12 @@ def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t):
     gyr_s = []
     acc_t_idx = acc_t_idx.astype('int')
     gyr_t_idx = gyr_t_idx.astype('int')
+
+    for i in range(3):
+        acc_xyz[:, i] = scipy.signal.wiener(acc_xyz[:, i] ,noise=acc_noise[i])
+        gyr_xyz[:, i] = scipy.signal.wiener(gyr_xyz[:, i] ,noise=gyr_noise[i])
+
+
     for i in range(len(acc_t_idx)):
         acc_s.append(normalization(dimension_reduction(acc_xyz[acc_t_idx[i, 0]:acc_t_idx[i, 1], :]), 0))
         gyr_s.append(normalization(dimension_reduction(gyr_xyz[gyr_t_idx[i, 0]:gyr_t_idx[i, 1], :]), 0))
@@ -418,7 +424,7 @@ def read_data_from_path(path):
             segmentation_time = h_seg.segmentation(2000, noise_acc, noise_gyr)
             acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
             print(type(acc_t_idx))
-            signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t)
+            signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t, noise_acc, noise_gyr)
 
             if len(signal) == 5:
                 valid_data_list[key] = signal
