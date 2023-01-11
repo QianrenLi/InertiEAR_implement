@@ -8,16 +8,17 @@ import read_data
 from read_data import signal_read, remove_mean_value, segmentation_handle, pre_processing
 
 
-def load_acc_data_with_label(path='./files_individual/files_0_1'):
-    data_list = {}
-    for file_name in os.listdir(path):
-        if file_name.startswith("acc"):
-            voice_number = file_name.replace(".txt", "").replace("acc_1_", "").replace("gyr_1_", "").split("_")[0]
-            voice_number = int(voice_number)
-            if voice_number <= 1:
-                data_list[path + "/" + file_name] = voice_number
+def load_acc_data_with_label(paths):
+    data_dict = {}
+    for path in paths:
+        for cur_file_name in os.listdir(path):
+            if cur_file_name.startswith("acc"):
+                voice_number = cur_file_name.replace(".txt", "").replace("acc_1_", "").replace("gyr_1_", "").split("_")[0]
+                voice_number = int(voice_number)
+                if voice_number <= 9:
+                    data_dict[path + "/" + cur_file_name] = voice_number
 
-    return data_list
+    return data_dict
 
 
 def get_corresponding_gyr_path(acc_data_path):
@@ -56,8 +57,8 @@ def generate_signal(acc_data_path, gyr_data_path):
 
 
 def convert_to_spec(signal):
-    signal = torch.Tensor([signal])
-    sgram = read_data.AudioUtil.spectro_gram((signal, 800))
+    signal = torch.Tensor([signal.tolist()])
+    sgram = read_data.AudioUtil.spectro_gram((signal, 800), n_fft=256,win_length=8)
     sgram_numpy = sgram.numpy()
     sgram_tensor = torch.Tensor(sgram_numpy)
     # print(sgram_numpy.shape)
@@ -67,14 +68,5 @@ def convert_to_spec(signal):
 
 
 if __name__ == '__main__':
-    acc_data_list = load_acc_data_with_label()
-    i = 0
-    max_s_len = 0
-    average_s_len = 0
-    total_s_len = 0
-    for acc_path, label in acc_data_list.items():
-        gyr_path = get_corresponding_gyr_path(acc_path)
-        signal = generate_signal(acc_path, gyr_path)
-        signal = pad_trunc(signal, 1000)
-        sgram = convert_to_spec(signal)
-        print(sgram.shape)
+    for file_name in os.listdir("files_individual"):
+        print(file_name)

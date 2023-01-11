@@ -22,13 +22,13 @@ class AudioUtil():
     # Generate a Spectrogram
     # ----------------------------
     @staticmethod
-    def spectro_gram(aud, n_mels=64, n_fft=128, hop_len=None):
+    def spectro_gram(aud, n_mels=64, n_fft=128,win_length= 64, hop_len=None):
         sig, sr = aud
         top_db = 70
 
         # spec has shape [channel, n_mels, time], where channel is mono, stereo etc 
         # spec = transforms.MelSpectrogram(sr, n_fft=n_fft, hop_length=hop_len, n_mels=n_mels)(sig) 
-        spec = transforms.Spectrogram(n_fft=n_fft, hop_length=hop_len, power=2)(sig)
+        spec = transforms.Spectrogram(n_fft=n_fft, hop_length=hop_len, power=2,win_length=win_length)(sig)
         # Convert to decibels 
         spec = transforms.AmplitudeToDB(top_db=top_db)(spec)
         return (spec)

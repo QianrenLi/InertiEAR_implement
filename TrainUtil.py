@@ -5,7 +5,7 @@ import torch
 from torch import nn
 
 
-def training(model, train_dl, num_epochs):
+def training(model, train_dl, val_dl, num_epochs):
     # Loss Function, Optimizer and Scheduler
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -58,7 +58,9 @@ def training(model, train_dl, num_epochs):
         num_batches = len(train_dl)
         avg_loss = running_loss / num_batches
         acc = correct_prediction / total_prediction
-        print(f'Epoch: {epoch}, Loss: {avg_loss:.2f}, Accuracy: {acc:.2f}')
+        print(f'Epoch: {epoch}, Loss: {avg_loss:.5f}, Accuracy: {acc:.2f}')
+        # Inference
+        inference(model, val_dl)
 
     print('Finished Training')
 

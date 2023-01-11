@@ -9,10 +9,13 @@ from TrainUtil import training, inference
 from data_loader import load_acc_data_with_label, get_corresponding_gyr_path
 
 if __name__ == "__main__":
+    paths = ["files_individual/files_2_4_6_8", "files_individual/files_0_1"]
+
     samples = []
     labels = []
-    acc_data_list = load_acc_data_with_label()
-    for acc_path, voice_number in acc_data_list.items():
+    acc_data_dict = load_acc_data_with_label(paths)
+
+    for acc_path, voice_number in acc_data_dict.items():
         gyr_path = get_corresponding_gyr_path(acc_path)
         samples.append([acc_path, gyr_path])
         labels.append(voice_number)
@@ -20,6 +23,8 @@ if __name__ == "__main__":
     # Construct file path by concatenating fold and file name
     data_dict = {'relative_path': samples, 'classID': labels}
     df = pd.DataFrame.from_dict(data_dict)
+
+    print(df.head(5))
 
     data_path = ""
     imu_ds = IMUDS(df)
@@ -41,8 +46,8 @@ if __name__ == "__main__":
     myModel = myModel.to(device)
 
     # Training Model
-    num_epochs = 10
-    training(myModel, train_dl, num_epochs)
+    num_epochs = 30
+    training(myModel, train_dl, val_dl, num_epochs)
 
     # Inference
     inference(myModel, val_dl)
