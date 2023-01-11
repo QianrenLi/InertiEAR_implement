@@ -347,20 +347,9 @@ class segmentation_handle():
         
 
         acc_t_intp, acc_s_intp, gyr_t_intp, gyr_s_intp = self.time_stamp_alignment(acc_s_f, gyr_s_f, 400)
-        # multiplied_signal = acc_s_intp * np.log(100*normalization(gyr_s_intp,0) + 1)
-        # multiplied_signal = (acc_s_intp  +  gyr_s_intp) * (acc_s_intp  +  gyr_s_intp)
+
         multiplied_signal = gyr_s_intp * acc_s_intp 
         
-        # import matplotlib.pyplot as plt
-        # plt.subplot(3,1,1)
-        # plt.plot(acc_s_intp)
-        # plt.subplot(3,1,2)
-        # plt.plot(gyr_s_intp)
-
-        # Image Dispaly
-        # f,t,zxx = scipy.signal.stft(multiplied_signal,fs = 2000)
-        # plt.pcolormesh(t,f,np.log(np.abs(zxx)))
-        # plt.show()
 
         # signal preprocessing
         multiplied_signal_f = signal_filter(multiplied_signal, fs=oFs, fstop=30, btype='highpass')
@@ -369,28 +358,11 @@ class segmentation_handle():
         power_signal = 1000 * normalization(power_signal, 0)
         # Otus thresholding
         threshold = otus_implementation(1000, np.log(power_signal + 1))
-        # print(threshold)
-        # multiplied_signal_f = signal_filter(abs(multiplied_signal),fs=oFs, fstop= 20, btype='lowpass')
-        # threshold = otus_implementation(1000, multiplied_signal_f)
-
         # Correction segmentation
         segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, 50, 50, 0.05 * oFs)
-        # print(segmentation_idx)
         segmentation_time = acc_t_intp[segmentation_idx]
-
         # Paper filtering
         # power_signal = signal_filter(multiplied_signal,fs=oFs,fstop= 20, btype='lowpass')
-
-        # Image Dispaly
-        # import matplotlib.pyplot as plt
-        # plt.subplot(3,1,3)
-        # plt.plot(abs(np.log(normalization(multiplied_signal_f,0) + 1)))
-        # plt.plot(abs(np.log(100 * normalization(multiplied_signal_f,0) + 1)))
-        # plt.plot(multiplied_signal_f)
-        # plt.plot(np.log(power_signal + 1))
-        # print(np.correlate(acc_s_intp,gyr_s_intp,mode = "full"))
-        # plt.plot(np.correlate(acc_s_intp,gyr_s_intp,mode = "full"))
-        # plt.show()
         return segmentation_time
 
     def time2index(self, segmentation_time):
@@ -433,61 +405,32 @@ def read_data_from_path(path):
     noise_acc, noise_gyr = noise_computation("./data_test/acc_1_999_999.txt", "./data_test/gyr_1_999_999.txt")
 
     data_list = load_data.load_data_form_path(path)
-    counter = 0
-    t_counter = 0
-    # acc_xyz  = np.array([]) 
-    # gyr_xyz  = np.array([])
-    # acc_t =   np.array([])
-    # gyr_t = np.array([])
+
     for key in data_list:
-        # print(data_list[key])
-        # try:
-        counter = counter + 1
-        acc_path = data_list[key][0]
-        gyr_path = data_list[key][1]
-        # acc_path =  "./files_0_1/acc_1_1_101.txt"
-        # gyr_path =  "./files_0_1/gyr_1_1_101.txt"
-        
-        acc_t, acc_xyz = signal_read(acc_path)
-        gyr_t, gyr_xyz = signal_read(gyr_path)
-        
-        # if counter == 1:
-        #     acc_xyz = _acc_xyz
-        #     gyr_xyz = _gyr_xyz
-        #     acc_t = _acc_t
-        #     gyr_t = _gyr_t
-        #     continue
-        # if counter < 5:
-        #     acc_xyz = np.append(acc_xyz,_acc_xyz,axis= 0)
-        #     gyr_xyz = np.append(gyr_xyz,_gyr_xyz,axis= 0)
-        #     acc_t = np.append(acc_t,_acc_t,axis= 0)
-        #     gyr_t = np.append(gyr_t,_gyr_t,axis= 0)
-        #     continue
-        # # print(acc_xyz.shape)
-        # counter = 0
-        # t_counter = t_counter + 1
-        # if t_counter < 3:
-        #     continue
-        
-        acc_xyz = remove_mean_value(acc_xyz)
-        gyr_xyz = remove_mean_value(gyr_xyz)
 
-        h_seg = segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, 400)
+        try:
+            acc_path = data_list[key][0]
+            gyr_path = data_list[key][1]
+            
+            acc_t, acc_xyz = signal_read(acc_path)
+            gyr_t, gyr_xyz = signal_read(gyr_path)
+            
+            
+            acc_xyz = remove_mean_value(acc_xyz)
+            gyr_xyz = remove_mean_value(gyr_xyz)
 
-        segmentation_time = h_seg.segmentation(2000, noise_acc, noise_gyr)
+            h_seg = segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, 400)
 
-        acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
-        # print(acc_t_idx)
-        signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,noise_acc,noise_gyr)
-        for i in range(len(signal)):
-            import matplotlib.pyplot as plt
-            plt.plot(signal[i])
-            plt.show()
+            segmentation_time = h_seg.segmentation(2000, noise_acc, noise_gyr)
+
+            acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
+            # print(acc_t_idx)
+            signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,noise_acc,noise_gyr)
         
         # if len(signal) == 5:
         #     valid_data_list[key] = signal
-        # except:
-        #     print("error_data: ", key)
+        except:
+            print("error_data: ", key)
 
     return valid_data_list
 
