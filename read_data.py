@@ -117,6 +117,11 @@ def signal_read(PATH):
     position = txyz[:, 1:4].astype(np.float64)
     return time, position
 
+def down_sampling(input_signal,fs,ofs):
+    width = len(input_signal)
+    factor = fs / ofs
+    output_signal = np.add.reduceat(input_signal, np.arange(0, width, factor))
+    return output_signal
 
 def dimension_reduction(xyz):
     signal_shape = xyz.shape
@@ -281,9 +286,39 @@ def segmentation_correct(seg_signal, threshold, duration_threshold, window_size,
             
     
     segmented_idx = np.array(cross_idx)
-
+    print(segmented_idx)
     # remove peak with hard threshold and return the detection works or not
     _idx_delete = []
+
+    if len(segmented_idx) > 2:
+
+        # Remove valley
+        _idx_delete = []
+        for i in range(int(len(segmented_idx) / 2)  - 1):
+            if (segmented_idx[2 * i+2] - segmented_idx[2 * i + 1]) < duration_threshold or np.mean(
+                    seg_signal[segmented_idx[2 * i +1]:segmented_idx[2 * i + 2]]) > 0.8 * threshold:
+                    _idx_delete.append(2 * i + 1)
+                    _idx_delete.append(2 * i + 2)
+        if len(_idx_delete) > 0:
+            segmented_idx = np.delete(segmented_idx,_idx_delete)
+
+        print(segmented_idx)
+
+        # Remove peak
+        _idx_delete = []
+        for i in range(int(len(segmented_idx) / 2)):
+            if (segmented_idx[2 * i+1] - segmented_idx[2 * i]) < duration_threshold or np.mean(
+                    seg_signal[segmented_idx[2 * i ]:segmented_idx[2 * i + 1]]) < 0.2 * threshold:
+                    _idx_delete.append(2 * i)
+                    _idx_delete.append(2 * i + 1)
+        if len(_idx_delete) > 0:
+            segmented_idx = np.delete(segmented_idx,_idx_delete)
+        # print(segmented_idx)
+
+        print(segmented_idx)
+    
+
+
     if len(segmented_idx) > 2:
 
         for i in range(int(len(segmented_idx) / 2)):
@@ -291,39 +326,21 @@ def segmentation_correct(seg_signal, threshold, duration_threshold, window_size,
                 segmented_idx[2 * i] = segmented_idx[2 * i] - extend_region
             if segmented_idx[2 * i + 1] + extend_region < len(seg_signal) - 1:
                 segmented_idx[2 * i + 1] = segmented_idx[2 * i + 1] + extend_region
-                
-    
-    for i in range(len(segmented_idx)):
-        if segmented_idx[i] - 0.5 * window_size > 0 and segmented_idx[i] != len(seg_signal) - 1:
-            segmented_idx[i] = segmented_idx[i] - 0.5 * window_size
+                    
+        
+        for i in range(len(segmented_idx)):
+            if segmented_idx[i] - 0.5 * window_size > 0 and segmented_idx[i] != len(seg_signal) - 1:
+                segmented_idx[i] = segmented_idx[i] - 0.5 * window_size
 
-    if len(segmented_idx) > 2:
-        for i in range(int(len(cross_idx) / 2)):
-            if (cross_idx[2 * i+1] - cross_idx[2 * i]) < duration_threshold or np.mean(
-                    seg_signal[cross_idx[2 * i ]:cross_idx[2 * i + 1]]) < 0.2 * threshold:
-                    _idx_delete.append(2 * i)
-                    _idx_delete.append(2 * i + 1)
-        if len(_idx_delete) > 0:
-            segmented_idx = np.delete(segmented_idx,_idx_delete)
-        # print(segmented_idx)
-        _idx_delete = []
-        for i in range(int(len(segmented_idx) / 2)  - 1):
-            if (segmented_idx[2 * i+2] - segmented_idx[2 * i + 1]) < duration_threshold or np.mean(
-                    seg_signal[segmented_idx[2 * i +1]:segmented_idx[2 * i + 2]]) > 0.8 * threshold:
-                    _idx_delete.append(2 * i + 1)
-                    _idx_delete.append(2 * i + 2)
-
-        if len(_idx_delete) > 0:
-            segmented_idx = np.delete(segmented_idx,_idx_delete)
+    # Correct similar data
     _idx_delete = []
     for i in range(len(segmented_idx) - 2):
         if segmented_idx[i+2] <= segmented_idx[i+1]:
             _idx_delete.append(i+1)
             _idx_delete.append(i+2)
-
+            
     if len(_idx_delete) > 0:
         segmented_idx = np.delete(segmented_idx,_idx_delete)
-
     # print(segmented_idx)
     return segmented_idx
 
@@ -359,7 +376,6 @@ class segmentation_handle():
         else:
             intp_length = factor * int(np.ceil((len(acc_t) + len(gyr_t)) / 2))
         # The interpolation takes the 0 to final value
-        shrink_factor = 0
         acc_t_intp = np.linspace(max(np.min(acc_t), np.min(gyr_t)) , time_stamp_end, intp_length)
         gyr_t_intp = np.linspace(max(np.min(acc_t), np.min(gyr_t)), time_stamp_end, intp_length)
         
@@ -384,7 +400,7 @@ class segmentation_handle():
         gyr_s_f = signal.wiener(gyr_s, noise=None)
         
 
-        acc_t_intp, acc_s_intp, gyr_t_intp, gyr_s_intp = self.time_stamp_alignment(acc_s_f, gyr_s_f, 400)
+        acc_t_intp, acc_s_intp, gyr_t_intp, gyr_s_intp = self.time_stamp_alignment(acc_s_f, gyr_s_f, oFs)
 
         multiplied_signal = gyr_s_intp * acc_s_intp 
         
@@ -392,8 +408,8 @@ class segmentation_handle():
         # signal preprocessing
         multiplied_signal_f = signal_filter(multiplied_signal, fs=oFs, fstop=30, btype='highpass')
         multiplied_signal_f = signal.hilbert(multiplied_signal_f)
-        power_signal = energy_calculation(np.abs(multiplied_signal_f), 100)
-        power_signal = 100 * normalization(power_signal, 0)
+        power_signal = energy_calculation(np.abs(multiplied_signal_f), 200)
+        power_signal = 10 * normalization(power_signal, 0)
         # Otus thresholding
         threshold = otus_implementation(1000, np.log(power_signal + 1))
         # import matplotlib.pyplot as plt
@@ -403,8 +419,24 @@ class segmentation_handle():
         # plt.plot(multiplied_signal)
         # plt.show()
         # Correction segmentation
-        segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, 100, 50, 0.3 * oFs)
+        segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, 200, 50, 0.3 * oFs)
         segmentation_time = acc_t_intp[segmentation_idx]
+        # if len(segmentation_time) != 2:
+        #     print(segmentation_idx)
+        #     import matplotlib.pyplot as plt
+        #     plt.subplot(4,1,1)
+        #     plt.plot(acc_s_intp)
+        #     plt.subplot(4,1,2)
+        #     plt.plot(gyr_s_intp)
+        #     plt.subplot(4,1,3)
+        #     plt.plot(multiplied_signal)
+        #     plt.subplot(4,1,4)
+        #     _xn = np.arange(len(power_signal))
+        #     plt.plot(_xn,np.log(power_signal + 1),_xn,threshold * np.ones(_xn.shape))
+        #     plt.show()
+
+
+
         # Paper filtering
         # power_signal = signal_filter(multiplied_signal,fs=oFs,fstop= 20, btype='lowpass')
         return segmentation_time
@@ -462,19 +494,19 @@ def read_data_from_path(path):
             acc_xyz = remove_mean_value(acc_xyz)
             gyr_xyz = remove_mean_value(gyr_xyz)
 
-            h_seg = segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, 400)
+            h_seg = segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, Fs = 400)
 
-            segmentation_time = h_seg.segmentation(2000, noise_acc, noise_gyr)
+            segmentation_time = h_seg.segmentation(oFs = 2000, noise_acc = noise_acc, noise_gyr = noise_gyr)
 
             acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
             # print(acc_t_idx)
             seg_signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,noise_acc,noise_gyr)
             # if len(seg_signal) != 1:
             #     print(acc_t_idx)
-            #     for i in range(len(seg_signal)):
-            #         import matplotlib.pyplot as plt
-            #         plt.plot(seg_signal[i])
-            #         plt.show()
+            # for i in range(len(seg_signal)):
+            #     import matplotlib.pyplot as plt
+            #     plt.plot(seg_signal[i])
+            #     plt.show()
                 # print(len(seg_signal))
             if len(seg_signal) == 1:
                 valid_data_list[key] = seg_signal

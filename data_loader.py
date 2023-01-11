@@ -16,6 +16,8 @@ def load_acc_data_with_label(paths):
             if cur_file_name.startswith("acc"):
                 voice_number = cur_file_name.replace(".txt", "").replace("acc_1_", "").replace("gyr_1_", "").split("_")[0]
                 voice_number = int(voice_number)
+
+                ## Slect Valid path
                 try:
                     acc_path = path + "/" + cur_file_name
                     gyr_path = path + "/" + cur_file_name.replace("acc_1_","gyr_1_")
@@ -36,6 +38,7 @@ def load_acc_data_with_label(paths):
                     seg_signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,noise_acc,noise_gyr)
                     if voice_number <= 9 and len(seg_signal) == 1:
                         data_dict[path + "/" + cur_file_name] = voice_number
+                        
                 except:
                     print("error_data: ", path + "/" + cur_file_name)
                 # print(path + "/" + cur_file_name)
