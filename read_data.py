@@ -421,7 +421,7 @@ class segmentation_handle():
 
         acc_t_intp, acc_s_intp, gyr_t_intp, gyr_s_intp = self.time_stamp_alignment(acc_s_f, gyr_s_f, oFs)
 
-        result_signal = normalization(acc_s_intp,1) + normalization(gyr_s_intp,1)
+        result_signal = normalization(acc_s_intp,1) + 0.5 *  normalization(gyr_s_intp,1)
         
         multiplied_signal = result_signal * result_signal
         # multiplied_signal = gyr_s_intp * acc_s_intp 
