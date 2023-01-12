@@ -444,6 +444,7 @@ class segmentation_handle():
         #     print(segmentation_idx)
         if is_plot == True:
             import matplotlib.pyplot as plt
+            plt.figure(figsize=(24,8))
             plt.subplot(4,1,1)
             plt.plot(acc_s_intp)
             plt.title("Interpolated Accelerometer data")
@@ -455,8 +456,10 @@ class segmentation_handle():
             plt.title("Multiplied Data")
             plt.subplot(4,1,4)
             _xn = np.arange(len(power_signal))
-            plt.plot(_xn,np.log(power_signal + 1),_xn,threshold * np.ones(_xn.shape),linestyle="solid")
-            plt.legend("Envelop","")
+            line1, = plt.plot(_xn,np.log(power_signal + 1))
+            line2, = plt.plot(_xn,threshold * np.ones(_xn.shape))
+            # plt.plot(_xn,np.log(power_signal + 1),_xn,threshold * np.ones(_xn.shape),linestyle="solid")
+            plt.legend(handles= [line1,line2],labels = ["Envelop","Threshold"],loc='best')
             plt.title("Envelop of data")
             plt.tight_layout()
             plt.show()
