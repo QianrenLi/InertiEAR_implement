@@ -588,87 +588,16 @@ def read_data_from_path(path):
 
 
 if __name__ == "__main__":
-    # path = "./files_individual/files_0_1/"
-    path = "./files_individual/files_3_5_7_9/"
-    # import os
-    # os.environ['KMP_DUPLICATE_LIB_OK']='True'
-    # path = "./data_test/"
-    # data_processing(file_directory="./files_individual/files_0/",acc_path="./files_individual/test/speed_test/acc_slow_200_0.txt",gyr_path="files_individual/test/speed_test/acc_slow_200_0.txt",label= 0)
-    # read_data_from_path(path)
-
-    # noise_acc, noise_gyr = noise_computation("./files_0_4/files/acc_1_999_999.txt", "./files_0_4/files/gyr_1_999_999.txt")
-    #
-    # # Open Acc and Gyro
-    # # acc_PATH = "./data/acczero4.txt"
-    # # gyr_PATH = "./data/gyrzero4.txt"
-    #
-    # # Open HW path
-    # acc_PATH = "./files_0_4/files/acc_1_0_20.txt"
-    # gyr_PATH = "./files_0_4/files/gyr_1_0_20.txt"
-    #
-    # acc_t, acc_xyz = signal_read(acc_PATH)
-    # gyr_t, gyr_xyz = signal_read(gyr_PATH)
-    #
-    # acc_xyz = remove_mean_value(acc_xyz)
-    # gyr_xyz = remove_mean_value(gyr_xyz)
-    #
-    # # For each segmentation segments, reinitialize this
-    # h_seg = segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, 400)
-    #
-    # # Signal space reduction
-    # # import numpy as np
-    #
-    # segmentation_time = h_seg.segmentation(2000, noise_acc, noise_gyr)
-    # acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
-    #
-    # # print(np.argmax(np.abs([-1,2,-5])))
-    # # import matplotlib.pyplot as plt
-    # # plt.figure
-    # # plt.plot(gyr_s_intp)
-    # # plt.show()
-    #
-    # signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t)
-    #
-    # if len(signal) != 5:
-    #     print("Error, signal length is not 5 ", len(signal))
-    #
-    # # max_len = 0
-    # # average_len = 0
-    # # for i in range(3):
-    # #   import matplotlib.pyplot as plt
-    # #   plt.figure
-    # #   plt.plot(acc_xyz[:,i])
-    # #   # generate spectrogram for signal[i]
-    # #   # transform = torchaudio.transforms.Spectrogram(n_fft=400)
-    # #   # spec = transform(torch.tensor(signal[i]))
-    # #   # plt.specgram(signal[i],Fs=400)
-    # #   plt.show()
-    #
-    # # import scipy
-    # # # TODO: Need a noise power
-    # # acc_s_f = scipy.signal.wiener(acc_s,noise = None)
-    # # gyr_s_f = scipy.signal.wiener(gyr_s,noise = None)
-    #
-    # # Wiener filterig reuslt display
-    # # import matplotlib.pyplot as plt
-    # # plt.subplot(2,2,1)
-    # # plt.plot(acc_s)
-    # # plt.subplot(2,2,2)
-    # # plt.plot(acc_s_f)
-    # # plt.subplot(2,2,3)
-    # # plt.plot(gyr_s)
-    # # plt.subplot(2,2,4)
-    # # plt.plot(gyr_s_f)
-    # # plt.show()
-    #
-    # # Nomalize
-    # # time,signal = concate_time(acc_t,acc_s,gyr_t,gyr_s)
-    # # import matplotlib.pyplot as plt
-    #
-    # # plt.plot(signal)
-    # # plt.plot(gyr_t)
-    # # plt.show()
-    #
-    # # pre_processing_example(isMel_spec= False)
-    # # print(type(sgram.numpy()))
-    # # print(sgram)
+    in_dir_path = "files_train/original_data_new"
+    out_dir_path = "files_train/signal_data_new"
+    for file_name in os.listdir(in_dir_path):
+        if file_name.count("acc"):
+            acc_file = file_name
+            gyr_file = file_name.replace("acc", "gyr")
+            label = int(file_name.replace(".txt", "").split("_")[-2])
+            print(acc_file, gyr_file, label)
+            out_dir_path_i = out_dir_path + "/files_" + str(label)
+            if not os.path.isdir(out_dir_path_i):
+                os.mkdir(out_dir_path_i)
+            data_processing(acc_path=in_dir_path + "/" + acc_file, gyr_path=in_dir_path + "/" + gyr_file,
+                            file_directory=out_dir_path_i + "/", label=label)

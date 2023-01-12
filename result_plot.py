@@ -41,8 +41,8 @@ noise_acc, noise_gyr = rd.noise_computation("./files_individual/noise/acc_1_999_
 # acc_path = "./file_test/speed_test/acc_1_501_501.txt"
 # gyr_path = "./file_test/speed_test/gyr_1_501_501.txt"
 
-acc_path = "./file_test/speed_test/acc_1_502_502.txt"
-gyr_path = "./file_test/speed_test/gyr_1_502_502.txt"
+acc_path = "./files_train/original_data/acc_1_3_1.txt"
+gyr_path = "./files_train/original_data/gyr_1_3_1.txt"
 
 
 

@@ -14,7 +14,7 @@ def plot_loss_curve(index_list, loss_se, loss_res):
     plt.legend(['SENet', 'ResNet'])
 
     plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
-
+    plt.figure(dpi=200)
     plt.show()
 
 
@@ -37,7 +37,7 @@ def plot_accuracy(index_list, accuracy_list_train, accuracy_list_test, name):
     plt.legend(['Train', 'Test'])
 
     plt.gca().xaxis.set_major_locator(MaxNLocator(integer=True))
-
+    plt.figure(dpi=200)
     plt.show()
 
 
@@ -62,9 +62,13 @@ def plot_correlation_matrix():
 
     cmap = sns.diverging_palette(220, 10, s=75, l=40, n=9, center="light", as_cmap=True)
     sns.heatmap(matrix_se, cmap=cmap, annot=True, fmt=".2f", linewidths=.5, cbar=True)
+    plt.title("SENet")
+    plt.figure(dpi=200)
     plt.show()
 
     sns.heatmap(matrix_res, cmap=cmap, annot=True, fmt=".2f", linewidths=.5, cbar=True)
+    plt.title("ResNet")
+    plt.figure(dpi=200)
     plt.show()
 
 
@@ -95,7 +99,8 @@ if __name__ == "__main__":
                     if cur_number < record_number:
                         cur_loss_list = loss_list_res
                     record_number = cur_number
-                cur_loss_list[record_number - 1] += float(line_list[2]) / 5
+                if int(line_list[1]) != 1:
+                    cur_loss_list[record_number - 1] += float(line_list[2]) / 5
             elif line.count("Accuracy:"):
                 line = line.replace(" ", "").replace("Epoch:", "").replace("Loss:", ""). \
                     replace("Accuracy:", "").replace("Totalitems:", "")
@@ -109,8 +114,8 @@ if __name__ == "__main__":
                 else:
                     cur_test_accuracy[epoch_number] = float(line_list[0])
 
-    loss_list_se = loss_list_se / 6
-    loss_list_res = loss_list_res / 6
+    loss_list_se = loss_list_se / 5
+    loss_list_res = loss_list_res / 5
 
     plot_loss_curve(index, loss_list_se, loss_list_res)
 
