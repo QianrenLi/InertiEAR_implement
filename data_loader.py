@@ -71,12 +71,12 @@ def generate_signal(acc_data_path, gyr_data_path, acc_noise, gyr_noise):
     acc_xyz = remove_mean_value(acc_xyz)
     gyr_xyz = remove_mean_value(gyr_xyz)
 
-    h_seg = segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, 400)
-    segmentation_time = h_seg.segmentation(2000, acc_noise, gyr_noise)
+    # h_seg = segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, 400)
+    # segmentation_time = h_seg.segmentation(2000, acc_noise, gyr_noise)
 
-    acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
-    # acc_t_idx = numpy.array([[0, -1]])
-    # gyr_t_idx = numpy.array([[0, -1]])
+    # acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
+    acc_t_idx = numpy.array([[0, -1]])
+    gyr_t_idx = numpy.array([[0, -1]])
     signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t, acc_noise, gyr_noise)
 
     return signal[0]
