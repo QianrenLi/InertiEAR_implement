@@ -46,7 +46,7 @@ def pre_processing_example(isMel_spec=True):
     sgram_numpy = sgram.numpy()
 
     spec_shape = sgram_numpy.shape
-    print(spec_shape)
+    # print(spec_shape)
     import matplotlib.pyplot as plt
     import matplotlib.ticker as mtick
     import numpy as np
@@ -286,7 +286,7 @@ def segmentation_correct(seg_signal, threshold, duration_threshold, window_size,
             
     
     segmented_idx = np.array(cross_idx)
-    print(segmented_idx)
+    # print(segmented_idx)
     # remove peak with hard threshold and return the detection works or not
     _idx_delete = []
 
@@ -302,7 +302,7 @@ def segmentation_correct(seg_signal, threshold, duration_threshold, window_size,
         if len(_idx_delete) > 0:
             segmented_idx = np.delete(segmented_idx,_idx_delete)
 
-        print(segmented_idx)
+        # print(segmented_idx)
 
         # Remove peak
         _idx_delete = []
@@ -315,7 +315,7 @@ def segmentation_correct(seg_signal, threshold, duration_threshold, window_size,
             segmented_idx = np.delete(segmented_idx,_idx_delete)
         # print(segmented_idx)
 
-        print(segmented_idx)
+        # print(segmented_idx)
     
 
 

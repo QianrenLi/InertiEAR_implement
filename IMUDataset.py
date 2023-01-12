@@ -10,7 +10,7 @@ from data_loader import generate_signal, convert_to_spec, pad_trunc, get_silence
 class IMUDS(Dataset):
     def __init__(self, df, acc_noise, gyr_noise):
         self.df = df
-        self.max_len = 500
+        self.max_len = 1000
         self.acc_noise = acc_noise
         self.gyr_noise = gyr_noise
 
