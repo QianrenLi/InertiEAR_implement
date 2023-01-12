@@ -174,17 +174,33 @@ def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,acc_nois
     for i in range(3):
         acc_xyz[:, i] = signal.wiener(acc_xyz[:, i] ,noise=acc_noise[i])
         gyr_xyz[:, i] = signal.wiener(gyr_xyz[:, i] ,noise=gyr_noise[i])
+
     
 
     for i in range(len(acc_t_idx)):
         acc_s.append(normalization(dimension_reduction(acc_xyz[acc_t_idx[i, 0]:acc_t_idx[i, 1], :]), 0))
         gyr_s.append(normalization(dimension_reduction(gyr_xyz[gyr_t_idx[i, 0]:gyr_t_idx[i, 1], :]), 0))
-
+        
+    import matplotlib.pyplot as plt
+    plt.subplot(3,1,1)
+    plt.plot(acc_xyz[acc_t_idx[0, 0]:acc_t_idx[0, 1],i])
+    plt.show()
+    plt.subplot(3,1,2)
+    plt.plot(acc_xyz[acc_t_idx[0, 0]:acc_t_idx[0, 1],i])
+    plt.show()
+    plt.subplot(3,1,3)
+    plt.plot(acc_xyz[acc_t_idx[0, 0]:acc_t_idx[0, 1],i])
+    plt.show()
+    
+    # plt.plot(acc_s[0])
+    # plt.show()
     out_signal = []
     for i in range(len(acc_s)):
         _, t_s = concate_time(acc_t[acc_t_idx[i, 0]:acc_t_idx[i, 1]], acc_s[i], gyr_t[gyr_t_idx[i, 0]:gyr_t_idx[i, 1]],
                               gyr_s[i])
-        
+        import matplotlib.pyplot as plt
+        plt.plot(t_s)
+        plt.show()
         # High frequency suppression
         t_s = high_frequency_suppression(t_s,800)
         # print(t_s)
