@@ -276,6 +276,16 @@ def otus_implementation(Fs, energy_signal):
     
     return np.argmax(variance_hist) * precision
 
+# def ocd_detection(seg_signal):
+#     _width = len(seg_signal)
+#     _like_hood = np.zeros(_width)
+#     for i in range(_width):
+#         _like_hood[i] = 
+
+
+# def bic_segmentation(seg_signal, W_MIN, W_MAX, N_SHIFT):
+    
+
 
 def segmentation_correct(seg_signal, threshold, duration_threshold, window_size, extend_region):
     index = seg_signal < threshold
@@ -295,6 +305,7 @@ def segmentation_correct(seg_signal, threshold, duration_threshold, window_size,
     
     segmented_idx = np.array(cross_idx)
     # print(segmented_idx)
+    # print(len(segmented_idx))
     # remove peak with hard threshold and return the detection works or not
     _idx_delete = []
 
@@ -303,7 +314,7 @@ def segmentation_correct(seg_signal, threshold, duration_threshold, window_size,
         # Remove valley
         _idx_delete = []
         for i in range(int(len(segmented_idx) / 2)  - 1):
-            if (segmented_idx[2 * i+2] - segmented_idx[2 * i + 1]) < duration_threshold or np.mean(
+            if (segmented_idx[2 * i+2] - segmented_idx[2 * i + 1]) <= duration_threshold or np.mean(
                     seg_signal[segmented_idx[2 * i +1]:segmented_idx[2 * i + 2]]) > 0.8 * threshold:
                     _idx_delete.append(2 * i + 1)
                     _idx_delete.append(2 * i + 2)
@@ -315,7 +326,7 @@ def segmentation_correct(seg_signal, threshold, duration_threshold, window_size,
         # Remove peak
         _idx_delete = []
         for i in range(int(len(segmented_idx) / 2)):
-            if (segmented_idx[2 * i+1] - segmented_idx[2 * i]) < duration_threshold or np.mean(
+            if (segmented_idx[2 * i+1] - segmented_idx[2 * i]) <= duration_threshold or np.mean(
                     seg_signal[segmented_idx[2 * i ]:segmented_idx[2 * i + 1]]) < 0.2 * threshold:
                     _idx_delete.append(2 * i)
                     _idx_delete.append(2 * i + 1)
@@ -344,15 +355,10 @@ def segmentation_correct(seg_signal, threshold, duration_threshold, window_size,
         if segmented_idx[i] - 0.5 * window_size > 0 and segmented_idx[i] != len(seg_signal) - 1:
             segmented_idx[i] = segmented_idx[i] - 0.5 * window_size
 
-    # Correct similar data
-    _idx_delete = []
-    for i in range(len(segmented_idx) - 2):
-        if segmented_idx[i+2] <= segmented_idx[i+1]:
-            _idx_delete.append(i+1)
-            _idx_delete.append(i+2)
-            
-    if len(_idx_delete) > 0:
-        segmented_idx = np.delete(segmented_idx,_idx_delete)
+        
+        
+    # print(segmented_idx)
+    # print(len(segmented_idx))
     # print(segmented_idx)
     return segmented_idx
 
@@ -399,7 +405,8 @@ class segmentation_handle():
 
         return acc_t_intp, acc_s_intp, gyr_t_intp, gyr_s_intp
 
-    def segmentation(self, oFs, noise_acc, noise_gyr, is_plot = False, non_linear_factor = 10, filter_type = 0):
+    def segmentation(self, oFs, noise_acc, noise_gyr, is_plot = False, non_linear_factor = 10, filter_type = 0, 
+                     Energy_WIN = 200, Duration_WIN = 210, Expanding_Range = 0.3):
         # Need to select axix with most energy
 
         energy_acc = np.linalg.norm(self.acc_xyz, axis=0, ord=2)
@@ -414,24 +421,26 @@ class segmentation_handle():
 
         acc_t_intp, acc_s_intp, gyr_t_intp, gyr_s_intp = self.time_stamp_alignment(acc_s_f, gyr_s_f, oFs)
 
-        multiplied_signal = (gyr_s_intp + acc_s_intp) * (gyr_s_intp + acc_s_intp) 
+        result_signal = normalization(acc_s_intp,1) + normalization(gyr_s_intp,1)
+        
+        multiplied_signal = result_signal * result_signal
         # multiplied_signal = gyr_s_intp * acc_s_intp 
         
         if filter_type == 1:
             multiplied_signal_f = signal_filter(multiplied_signal, fs=oFs, fstop=40, btype='lowpass')
-            power_signal = np.abs(non_linear_factor * multiplied_signal_f)
+            power_signal = np.abs(non_linear_factor *normalization(multiplied_signal_f,0))
             threshold = otus_implementation(1000, np.log(power_signal + 1))
-            segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, 200, 200, 0.3 * oFs)
+            segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, Energy_WIN, Duration_WIN, Expanding_Range * oFs)
             segmentation_time = acc_t_intp[segmentation_idx]
         else:
             # signal preprocessing
             multiplied_signal_f = signal_filter(multiplied_signal, fs=oFs, fstop=50, btype='highpass')
             multiplied_signal_f = signal.hilbert(multiplied_signal_f)
-            power_signal = energy_calculation(np.abs(multiplied_signal_f), 200)
+            power_signal = energy_calculation(np.abs(multiplied_signal_f), Energy_WIN)
             power_signal = non_linear_factor * normalization(power_signal, 0)
             # Otus thresholding
-            threshold = otus_implementation(1000, np.log(power_signal + 1))
-            segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, 200, 200, 0.3 * oFs)
+            threshold = otus_implementation(10000, np.log(power_signal + 1))
+            segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, Energy_WIN, Duration_WIN, Expanding_Range * oFs)
             segmentation_time = acc_t_intp[segmentation_idx]
             # import matplotlib.pyplot as plt
             # plt.subplot(2,1,2)
@@ -444,7 +453,7 @@ class segmentation_handle():
         #     print(segmentation_idx)
         if is_plot == True:
             import matplotlib.pyplot as plt
-            plt.figure(figsize=(24,8))
+            plt.figure(figsize=(16,8))
             plt.subplot(4,1,1)
             plt.plot(acc_s_intp)
             plt.title("Interpolated Accelerometer data")
@@ -503,6 +512,7 @@ class segmentation_handle():
             gyr_t_idx[-1] = len(gyr_t) - 1
 
         return np.reshape(acc_t_idx, (-1, 2)), np.reshape(gyr_t_idx, (-1, 2))
+
 
 
 def read_data_from_path(path):
