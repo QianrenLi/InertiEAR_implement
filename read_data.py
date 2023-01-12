@@ -101,6 +101,12 @@ def pre_processing_example(isMel_spec=True):
     plt.show()
 
 
+def PSNR(input_signal):
+    variance = np.var(input_signal)
+    mean_value = np.mean(input_signal)
+    MSE_value = np.power(mean_value,2) + variance
+    return np.max(np.abs(input_signal))/MSE_value
+
 def signal_read(PATH):
     with open(PATH, 'r') as f:
         acc_content = f.read()
@@ -180,27 +186,44 @@ def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,acc_nois
     for i in range(len(acc_t_idx)):
         acc_s.append(normalization(dimension_reduction(acc_xyz[acc_t_idx[i, 0]:acc_t_idx[i, 1], :]), 0))
         gyr_s.append(normalization(dimension_reduction(gyr_xyz[gyr_t_idx[i, 0]:gyr_t_idx[i, 1], :]), 0))
-        
-    import matplotlib.pyplot as plt
-    plt.subplot(3,1,1)
-    plt.plot(acc_xyz[acc_t_idx[0, 0]:acc_t_idx[0, 1],i])
-    plt.show()
-    plt.subplot(3,1,2)
-    plt.plot(acc_xyz[acc_t_idx[0, 0]:acc_t_idx[0, 1],i])
-    plt.show()
-    plt.subplot(3,1,3)
-    plt.plot(acc_xyz[acc_t_idx[0, 0]:acc_t_idx[0, 1],i])
-    plt.show()
     
-    # plt.plot(acc_s[0])
+    
+    import matplotlib.pyplot as plt
+    import matplotlib.ticker as mtick
+    # fig = plt.figure()
+    # ax = fig.add_subplot(311)
+    # ax.plot(acc_xyz[acc_t_idx[0, 0]:acc_t_idx[0, 1],0])
+    # ax.set_ylabel("x axis")
+    # ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2f'))
+    # ax.set_title("Three axis of Accerelator")
+    # ax = fig.add_subplot(312)
+    # ax.plot(acc_xyz[acc_t_idx[0, 0]:acc_t_idx[0, 1],1])
+    # ax.set_ylabel("y axis")
+    # ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2f'))
+    # ax = fig.add_subplot(313)
+    # ax.plot(acc_xyz[acc_t_idx[0, 0]:acc_t_idx[0, 1],2])
+    # ax.set_ylabel("z axis")
+    # ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2f'))
+    # # plt.tight_layout()
     # plt.show()
+    
+    # plt.subplot(2,1,1)
+    # plt.plot(acc_s[0])
+    # plt.title("Acc Signal")
+    # plt.subplot(2,1,2)
+    # plt.plot(gyr_s[0])
+    # plt.title("Gyr Signal")
+    # plt.tight_layout()
+    # plt.show()
+    
     out_signal = []
     for i in range(len(acc_s)):
         _, t_s = concate_time(acc_t[acc_t_idx[i, 0]:acc_t_idx[i, 1]], acc_s[i], gyr_t[gyr_t_idx[i, 0]:gyr_t_idx[i, 1]],
                               gyr_s[i])
-        import matplotlib.pyplot as plt
-        plt.plot(t_s)
-        plt.show()
+        # import matplotlib.pyplot as plt
+        # plt.plot(t_s)
+        # plt.title("Concated Signal")
+        # plt.show()
         # High frequency suppression
         t_s = high_frequency_suppression(t_s,800)
         # print(t_s)
@@ -256,14 +279,15 @@ def energy_calculation(input_signal, window_size):
     input_signal = np.pad(input_signal, (window_size,), constant_values=(0, 0))
     for i in range(power_signal_width):
         # power_signal[i] = np.sum(np.power(input_signal[i:i + window_size], 2))
-        power_signal[i] = np.mean(np.power(input_signal[i:i + window_size], 2))
+        # power_signal[i] = np.median(np.abs(input_signal[i:i + window_size]))
+        power_signal[i] = np.mean(np.abs(input_signal[i:i + window_size]))
     return power_signal
 
 
 # Do convolution
 
 def otus_implementation(Fs, energy_signal):
-    maximum_value = np.max(energy_signal) / 3
+    maximum_value = np.max(energy_signal) 
     precision = maximum_value / Fs
     histgram = np.zeros(Fs + 1)
     # Contruct histgram
@@ -276,6 +300,7 @@ def otus_implementation(Fs, energy_signal):
 
     # normalize histgram
     histgram = histgram / np.sum(histgram)
+    histgram[histgram < 0.2/Fs] = 0
     weighted_hist = np.multiply(histgram, np.linspace(0, maximum_value, num=Fs + 1, endpoint=True))
     global_val = sum(weighted_hist)
     cum_hist = np.cumsum(histgram)
@@ -302,7 +327,6 @@ def otus_implementation(Fs, energy_signal):
 
 # def bic_segmentation(seg_signal, W_MIN, W_MAX, N_SHIFT):
     
-
 
 def segmentation_correct(seg_signal, threshold, duration_threshold, window_size, extend_region):
     index = seg_signal < threshold
@@ -379,8 +403,68 @@ def segmentation_correct(seg_signal, threshold, duration_threshold, window_size,
     # print(segmented_idx)
     return segmented_idx
 
-    # print(np.nonzero(diff_idx))
+    # print(np.nonzero(diff_idx))    
 
+def window_energy_computation(xyz_data,window_size):
+    power_signal = np.zeros(3)
+    for i in range(3):
+        power_signal_width = len(xyz_data[:,i])
+        input_signal = np.pad(xyz_data[:,i].flatten(), (window_size,), constant_values=(0, 0))
+        input_signal = median_filter(input_signal,7)
+        # signal_var = 3 * np.var(input_signal)
+        # print(signal_var)
+        # input_signal[abs(input_signal) > signal_var] = signal_var
+        # input_signal = normalization(input_signal,1)
+        # import matplotlib.pyplot as plt
+        # plt.plot(input_signal)
+        # plt.show()
+        for j in range(power_signal_width):
+            # power_signal[i] = np.sum(np.power(input_signal[i:i + window_size], 2))
+            power_signal[i] += np.mean(np.abs(input_signal[j:j + window_size]))
+        
+    return power_signal
+
+def median_filter(input_signal,window_size):
+    _input_signal = np.pad(input_signal, (window_size,), constant_values=(0, 0))
+    for i in range(len(input_signal)):
+        input_signal[i] = np.median(_input_signal[i:i+window_size])
+    return input_signal
+
+def spectral_entropy_calculation(xyz_data):
+    power_signal = np.zeros(3)
+    for i in range(3):
+        input_signal = xyz_data[:,i].flatten()
+        input_signal = normalization(input_signal,1)
+        signal_spec = np.power(np.fft.fft(input_signal),2)
+        probability_distribution = signal_spec/sum(signal_spec)
+        power_signal[i] = sum(probability_distribution * np.log2(probability_distribution))/np.log2(len(input_signal))
+    return power_signal
+
+def create_hist(energy_signal,Fs):
+    maximum_value = np.max(energy_signal)
+    precision = maximum_value  / Fs
+    histgram = np.zeros(Fs + 1)
+    # Contruct histgram
+    for i in range(len(energy_signal)):
+        t_val = energy_signal[i]
+        if t_val > maximum_value:
+            t_val = maximum_value
+        idx = int(np.floor(np.floor(t_val / precision)))
+        histgram[idx] += 1
+
+    # normalize histgram
+    histgram = histgram / np.sum(histgram)
+    return histgram
+
+def entropy_calculation(xyz_data):
+    power_signal = np.zeros(3)
+    for i in range(3):
+        input_signal = np.abs(xyz_data[:,i].flatten())
+        
+        probability_distribution = create_hist(input_signal,10000)
+        power_signal[i] = sum(probability_distribution * np.log2(probability_distribution))/np.log2(len(input_signal))
+    return power_signal
+        
 
 class segmentation_handle():
     def __init__(self, acc_xyz, gyr_xyz, acc_t, gyr_t, Fs) -> None:
@@ -423,24 +507,50 @@ class segmentation_handle():
         return acc_t_intp, acc_s_intp, gyr_t_intp, gyr_s_intp
 
     def segmentation(self, oFs, noise_acc, noise_gyr, is_plot = False, non_linear_factor = 10, filter_type = 0, 
-                     Energy_WIN = 200, Duration_WIN = 210, Expanding_Range = 0.3, is_test = False):
+                     Energy_WIN = 200, Duration_WIN = 210, Expanding_Range = 0.3, is_test = False,is_auto_threshold = False):
         # Need to select axix with most energy
-
-        energy_acc = np.linalg.norm(self.acc_xyz, axis=0, ord=2)
-        energy_gyr = np.linalg.norm(self.gyr_xyz, axis=0, ord=2)
-
+            
+        for i in range(3):
+            self.acc_xyz[:, i] = signal.wiener(self.acc_xyz[:, i] ,noise=noise_acc[i])
+            self.gyr_xyz[:, i] = signal.wiener(self.gyr_xyz[:, i] ,noise=noise_gyr[i])
+        energy_acc = window_energy_computation(self.acc_xyz, window_size = 20)
+        energy_gyr = window_energy_computation(self.gyr_xyz, window_size = 20)
+        # energy_acc = spectral_entropy_calculation(self.acc_xyz)
+        # energy_gyr = spectral_entropy_calculation(self.gyr_xyz)
+        # energy_acc = entropy_calculation(self.acc_xyz)
+        # energy_gyr = entropy_calculation(self.gyr_xyz)
+        # energy_acc = np.linalg.norm(self.acc_xyz, axis=0, ord=2)
+        # energy_gyr = np.linalg.norm(self.gyr_xyz, axis=0, ord=2)
+        # import matplotlib.pyplot as plt
+        # fig = plt.figure()
+        # ax = fig.add_subplot(311)
+        # ax.plot(self.acc_xyz[:,0])
+        # ax = fig.add_subplot(312)
+        # ax.plot(self.acc_xyz[:,1])
+        # ax.set_ylabel("y axis")
+        # ax = fig.add_subplot(313)
+        # ax.plot(self.acc_xyz[:,2])
+        # ax.set_ylabel("z axis")
+        # # plt.tight_layout()
+        # plt.show()
+        
+        # acc_s = self.acc_xyz[:, np.argmax(energy_acc)]
+        # gyr_s = self.gyr_xyz[:, np.argmax(energy_gyr)]
         acc_s = self.acc_xyz[:, np.argmax(energy_acc)]
         gyr_s = self.gyr_xyz[:, np.argmax(energy_gyr)]
-
-        acc_s_f = signal.wiener(acc_s, noise=None)
-        gyr_s_f = signal.wiener(gyr_s, noise=None)
         
+
+        acc_s_f = acc_s
+        gyr_s_f = gyr_s
+
 
         acc_t_intp, acc_s_intp, gyr_t_intp, gyr_s_intp = self.time_stamp_alignment(acc_s_f, gyr_s_f, oFs)
 
         result_signal = normalization(acc_s_intp,1) + 0.5 *  normalization(gyr_s_intp,1)
         
         multiplied_signal = result_signal * result_signal
+        
+        multiplied_signal = median_filter(multiplied_signal,7)
         # multiplied_signal = gyr_s_intp * acc_s_intp 
         # f, t, Zxx = scipy.signal.stft(multiplied_signal,fs = 400)
         # import matplotlib.pyplot as plt
@@ -451,6 +561,7 @@ class segmentation_handle():
         # plt.ylabel("Frequency")
         # plt.xlabel("Time sample")
         # plt.show()
+
         
         if filter_type == 1:
             multiplied_signal = abs(multiplied_signal)
@@ -459,16 +570,22 @@ class segmentation_handle():
             threshold = otus_implementation(1000, np.log(power_signal + 1))
             segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, Energy_WIN, Duration_WIN, Expanding_Range * oFs)
             segmentation_time = acc_t_intp[segmentation_idx]
+            segmentation_idx = np.reshape(segmentation_idx/(oFs/self.Fs),(-1,2))
         else:
             # signal preprocessing
             multiplied_signal_f = signal_filter(multiplied_signal, fs=oFs, fstop=50, btype='highpass')
             multiplied_signal_f = signal.hilbert(multiplied_signal_f)
             power_signal = energy_calculation(np.abs(multiplied_signal_f), Energy_WIN)
+            if is_auto_threshold:
+                non_linear_factor = PSNR(power_signal)/10
+
             power_signal = non_linear_factor * normalization(power_signal, 0)
+            
             # Otus thresholding
             threshold = otus_implementation(10000, np.log(power_signal + 1))
             segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, Energy_WIN, Duration_WIN, Expanding_Range * oFs)
             segmentation_time = acc_t_intp[segmentation_idx]
+            segmentation_idx = np.reshape(segmentation_idx/(oFs/self.Fs),(-1,2))
             # import matplotlib.pyplot as plt
             # plt.subplot(2,1,2)
             # plt.plot(np.log(power_signal + 1))

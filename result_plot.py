@@ -24,14 +24,23 @@ noise_acc, noise_gyr = rd.noise_computation("./files_individual/noise/acc_1_999_
 
 ## Segmentation Process Example
 
-acc_path = "./files_individual/test/speed_test/acc_1_0_5.txt"
-gyr_path = "./files_individual/test/speed_test/gyr_1_0_5.txt"
+# acc_path = "./files_individual/test/speed_test/acc_1_0_5.txt"
+# gyr_path = "./files_individual/test/speed_test/gyr_1_0_5.txt"
+
+# acc_path = "./files_train/original_data/acc_1_2_0.txt"
+# gyr_path = "./files_train/original_data/gyr_1_2_0.txt"
+
+# acc_path = "./files_train/original_data/acc_1_3_0.txt"
+# gyr_path = "./files_train/original_data/gyr_1_3_0.txt"
+
+# acc_path = "./files_train/original_data/acc_1_4_0.txt"
+# gyr_path = "./files_train/original_data/gyr_1_4_0.txt"
 
 # acc_path = "./files_0_4/files/acc_1_0_30.txt"
 # gyr_path = "./files_0_4/files/gyr_1_0_30.txt"
 
-# acc_path = "./file_test/speed_test/acc_1500_0.txt"
-# gyr_path = "./file_test/speed_test/gyr_1500_0.txt"
+acc_path = "./file_test/speed_test/acc_1500_0.txt"
+gyr_path = "./file_test/speed_test/gyr_1500_0.txt"
 # reference_point = np.linspace( 8300, 744000, 201)
 # Original Signal Display
 acc_t, acc_xyz = rd.signal_read(acc_path)
@@ -50,16 +59,16 @@ h_seg = rd.segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, Fs = 400)
 # segmentation_time,segmentation_idx = h_seg.segmentation(oFs = 2000, noise_acc = noise_acc, noise_gyr = noise_gyr,is_plot= True,non_linear_factor= 10000,filter_type= 0,Energy_WIN = 200,Duration_WIN = 500,Expanding_Range = 0.2,is_test = True)
 
 # print(segmentation_check(reference_point,segmentation_idx))
-segmentation_time,segmentation_idx = h_seg.segmentation(oFs = 2000, noise_acc = noise_acc, noise_gyr = noise_gyr,is_plot= True,non_linear_factor= 100,filter_type= 0,is_test = True)
+segmentation_time,segmentation_idx = h_seg.segmentation(oFs = 2000, noise_acc = noise_acc, noise_gyr = noise_gyr,is_plot= True,non_linear_factor= 1000,filter_type= 0,is_test = True,is_auto_threshold = True)
 
 # print(segmentation_check(reference_point,segmentation_idx))
 ##################### Segmentation Error ############
 # # For paper proposed function, the segmentation is valid under small non_linear_factor
 
 
-acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
-seg_signal = rd.pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,noise_acc,noise_gyr)
-
+# acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
+seg_signal = rd.pre_processing(acc_xyz, gyr_xyz, segmentation_idx, segmentation_idx, acc_t, gyr_t,noise_acc,noise_gyr)
+print(len(seg_signal))
 
 
 # segmentation_time,segmentation_idx = h_seg.segmentation(oFs = 2000, noise_acc = noise_acc, noise_gyr = noise_gyr,is_plot= True,non_linear_factor= 10000,filter_type= 0,Energy_WIN = 200,Duration_WIN = 500,Expanding_Range = 0.2,is_test = True)
