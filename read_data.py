@@ -286,7 +286,7 @@ def segmentation_correct(seg_signal, threshold, duration_threshold, window_size,
             
     
     segmented_idx = np.array(cross_idx)
-    print(segmented_idx)
+    # print(segmented_idx)
     # remove peak with hard threshold and return the detection works or not
     _idx_delete = []
 
@@ -302,7 +302,7 @@ def segmentation_correct(seg_signal, threshold, duration_threshold, window_size,
         if len(_idx_delete) > 0:
             segmented_idx = np.delete(segmented_idx,_idx_delete)
 
-        print(segmented_idx)
+        # print(segmented_idx)
 
         # Remove peak
         _idx_delete = []
@@ -315,22 +315,26 @@ def segmentation_correct(seg_signal, threshold, duration_threshold, window_size,
             segmented_idx = np.delete(segmented_idx,_idx_delete)
         # print(segmented_idx)
 
-        print(segmented_idx)
+        # print(segmented_idx)
     
 
 
-    if len(segmented_idx) > 2:
 
-        for i in range(int(len(segmented_idx) / 2)):
-            if segmented_idx[2 * i] - extend_region > 0:
-                segmented_idx[2 * i] = segmented_idx[2 * i] - extend_region
-            if segmented_idx[2 * i + 1] + extend_region < len(seg_signal) - 1:
-                segmented_idx[2 * i + 1] = segmented_idx[2 * i + 1] + extend_region
-                    
+
+    for i in range(int(len(segmented_idx) / 2)):
+        if segmented_idx[2 * i] - extend_region > 0:
+            segmented_idx[2 * i] = segmented_idx[2 * i] - extend_region
+        else:
+            segmented_idx[2 * i] = 0
+        if segmented_idx[2 * i + 1] + extend_region < len(seg_signal) - 1:
+            segmented_idx[2 * i + 1] = segmented_idx[2 * i + 1] + extend_region
+        else:
+            segmented_idx[2 * i + 1] = len(seg_signal) - 1
+                
         
-        for i in range(len(segmented_idx)):
-            if segmented_idx[i] - 0.5 * window_size > 0 and segmented_idx[i] != len(seg_signal) - 1:
-                segmented_idx[i] = segmented_idx[i] - 0.5 * window_size
+    for i in range(len(segmented_idx)):
+        if segmented_idx[i] - 0.5 * window_size > 0 and segmented_idx[i] != len(seg_signal) - 1:
+            segmented_idx[i] = segmented_idx[i] - 0.5 * window_size
 
     # Correct similar data
     _idx_delete = []
@@ -419,7 +423,7 @@ class segmentation_handle():
         # plt.plot(multiplied_signal)
         # plt.show()
         # Correction segmentation
-        segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, 200, 50, 0.3 * oFs)
+        segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, 200, 200, 0.2 * oFs)
         segmentation_time = acc_t_intp[segmentation_idx]
         # if len(segmentation_time) != 2:
         #     print(segmentation_idx)
@@ -505,7 +509,10 @@ def read_data_from_path(path):
             #     print(acc_t_idx)
             # for i in range(len(seg_signal)):
             #     import matplotlib.pyplot as plt
+            #     plt.subplot(2,1,1)
             #     plt.plot(seg_signal[i])
+            #     plt.subplot(2,1,2)
+            #     plt.plot(dimension_reduction(acc_xyz))
             #     plt.show()
                 # print(len(seg_signal))
             if len(seg_signal) == 1:
@@ -518,7 +525,7 @@ def read_data_from_path(path):
 
 if __name__ == "__main__":
     # path = "./files_individual/files_0_1/"
-    path = "./files_individual/files_2_4_6_8/"
+    path = "./files_individual/files_3_5_7_9/"
     # import os
     # os.environ['KMP_DUPLICATE_LIB_OK']='True'
     # path = "./data_test/"
