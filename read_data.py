@@ -514,7 +514,36 @@ class segmentation_handle():
         return np.reshape(acc_t_idx, (-1, 2)), np.reshape(gyr_t_idx, (-1, 2))
 
 
-
+def data_processing(acc_path,gyr_path,file_directory,label):
+    noise_acc, noise_gyr = noise_computation("./files_individual/noise/acc_1_999_999.txt", "./files_individual/noise/gyr_1_999_999.txt")
+    acc_t, acc_xyz = signal_read(acc_path)
+    gyr_t, gyr_xyz = signal_read(gyr_path)
+    acc_xyz = remove_mean_value(acc_xyz)
+    gyr_xyz = remove_mean_value(gyr_xyz)
+    
+    h_seg = segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, Fs = 400)
+    
+    segmentation_time = h_seg.segmentation(oFs = 2000, noise_acc = noise_acc, noise_gyr = noise_gyr,is_plot= False,non_linear_factor= 10000,filter_type= 0,Energy_WIN = 400,Duration_WIN = 500,Expanding_Range = 0.2)
+    
+    acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
+    
+    seg_signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,noise_acc,noise_gyr)
+    import os
+    voice_number = 0
+    for cur_file_name in os.listdir(file_directory):
+        if cur_file_name.startswith("signal"):
+            _voice_number = int(cur_file_name.replace(".npy", "").replace("signal_", "").split("_")[2])
+            voice_number = max(voice_number,_voice_number)
+    
+    for i in range(len(seg_signal)):
+        np.save(("%ssignal_1_%d_%d") % (file_directory,label,i + voice_number + 1),seg_signal[i])
+    
+    # Use example
+    # Save Example
+    # data_processing(file_directory="./files_individual/files_signal/files_0/",acc_path="./files_individual/test/speed_test/acc_slow_200_0.txt",gyr_path="files_individual/test/speed_test/acc_slow_200_0.txt",label= 0)
+    # Load Example
+    # signal = np.load(filename)
+    
 def read_data_from_path(path):
     valid_data_list = {}
     noise_acc, noise_gyr = noise_computation("./files_individual/noise/acc_1_999_999.txt", "./files_individual/noise/gyr_1_999_999.txt")
@@ -564,7 +593,8 @@ if __name__ == "__main__":
     # import os
     # os.environ['KMP_DUPLICATE_LIB_OK']='True'
     # path = "./data_test/"
-    read_data_from_path(path)
+    # data_processing(file_directory="./files_individual/files_0/",acc_path="./files_individual/test/speed_test/acc_slow_200_0.txt",gyr_path="files_individual/test/speed_test/acc_slow_200_0.txt",label= 0)
+    # read_data_from_path(path)
 
     # noise_acc, noise_gyr = noise_computation("./files_0_4/files/acc_1_999_999.txt", "./files_0_4/files/gyr_1_999_999.txt")
     #
