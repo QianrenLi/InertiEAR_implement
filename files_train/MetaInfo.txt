@@ -1,0 +1,48 @@
+acc_1_0_0.txt gyr_1_0_0.txt 0
+53
+acc_1_0_1.txt gyr_1_0_1.txt 0
+46
+acc_1_1_0.txt gyr_1_1_0.txt 1
+52
+acc_1_1_1.txt gyr_1_1_1.txt 1
+32
+acc_1_2_0.txt gyr_1_2_0.txt 2
+6
+acc_1_2_1.txt gyr_1_2_1.txt 2
+42
+acc_1_2_2.txt gyr_1_2_2.txt 2
+47
+acc_1_2_3.txt gyr_1_2_3.txt 2
+53
+acc_1_3_0.txt gyr_1_3_0.txt 3
+4
+acc_1_3_1.txt gyr_1_3_1.txt 3
+43
+acc_1_3_2.txt gyr_1_3_2.txt 3
+45
+acc_1_3_3.txt gyr_1_3_3.txt 3
+44
+acc_1_4_0.txt gyr_1_4_0.txt 4
+50
+acc_1_4_1.txt gyr_1_4_1.txt 4
+39
+acc_1_5_0.txt gyr_1_5_0.txt 5
+40
+acc_1_5_1.txt gyr_1_5_1.txt 5
+51
+acc_1_6_0.txt gyr_1_6_0.txt 6
+43
+acc_1_6_1.txt gyr_1_6_1.txt 6
+51
+acc_1_7_0.txt gyr_1_7_0.txt 7
+46
+acc_1_7_1.txt gyr_1_7_1.txt 7
+40
+acc_1_8_0.txt gyr_1_8_0.txt 8
+27
+acc_1_8_1.txt gyr_1_8_1.txt 8
+49
+acc_1_9_0.txt gyr_1_9_0.txt 9
+40
+acc_1_9_1.txt gyr_1_9_1.txt 9
+41
