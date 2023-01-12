@@ -46,7 +46,7 @@ def pre_processing_example(isMel_spec=True):
     sgram_numpy = sgram.numpy()
 
     spec_shape = sgram_numpy.shape
-    print(spec_shape)
+    # print(spec_shape)
     import matplotlib.pyplot as plt
     import matplotlib.ticker as mtick
     import numpy as np

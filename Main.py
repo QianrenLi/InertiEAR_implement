@@ -6,6 +6,7 @@ from torch.utils.data import random_split
 from IMUClassifier import IMUClassifier
 from IMUDataset import IMUDS
 from SENet import SENet
+from MobileNetV2 import MobileNetV2
 from ResNet import resnet18
 from TrainUtil import training, inference
 from data_loader import load_acc_data_with_label, get_corresponding_gyr_path
@@ -37,6 +38,7 @@ if __name__ == "__main__":
     num_items = len(imu_ds)
     num_train = round(num_items * 0.8)
     num_val = num_items - num_train
+    torch.manual_seed(1234)
     train_ds, val_ds = random_split(imu_ds, [num_train, num_val])
 
     # Create training and validation data loaders
@@ -47,20 +49,17 @@ if __name__ == "__main__":
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
 
-    # Use CNN
     # myModel = IMUClassifier()
-    # Use ResNet
-    # myModel = resnet18()
-
-    myModel = SENet()
+    # Use SENet
+    myModel = MobileNetV2()
     myModel = myModel.to(device)
 
     # Training Model
-    num_epochs = 30
+    num_epochs = 20
     training(myModel, train_dl, val_dl, num_epochs)
 
     # Inference
-    inference(myModel, val_dl)
-    
-    # torch.save(myModel,"model/se_net.pth")
+    correlation_matrix = inference(myModel, val_dl, is_correlation=True)
+    print(correlation_matrix)
 
+    torch.save(myModel,"model/mobile_net.pth")
