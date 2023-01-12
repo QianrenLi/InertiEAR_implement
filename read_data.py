@@ -264,8 +264,16 @@ def otus_implementation(Fs, energy_signal):
     cum_hist = np.cumsum(histgram)
     cum_weighted_hist = np.cumsum(weighted_hist)
 
-    variance_hist = np.divide(np.power(cum_hist * global_val - cum_weighted_hist, 2), cum_hist * (1 - cum_hist))
-
+    variance_hist = np.zeros(cum_weighted_hist.shape)
+    _cum_hist = cum_hist * (1 - cum_hist)
+    _cum_hist_power = np.power(cum_hist * global_val - cum_weighted_hist, 2)
+    for i in range(len(variance_hist)):
+        if _cum_hist[i] != 0:
+            # variance_hist[i] = np.divide(np.power(cum_hist * global_val - cum_weighted_hist, 2), cum_hist * (1 - cum_hist))
+            variance_hist[i] = np.divide(_cum_hist_power[i], _cum_hist[i])
+        else:
+            variance_hist[i] = 0
+    
     return np.argmax(variance_hist) * precision
 
 
@@ -391,7 +399,7 @@ class segmentation_handle():
 
         return acc_t_intp, acc_s_intp, gyr_t_intp, gyr_s_intp
 
-    def segmentation(self, oFs, noise_acc, noise_gyr):
+    def segmentation(self, oFs, noise_acc, noise_gyr, is_plot = False, non_linear_factor = 10, filter_type = 0):
         # Need to select axix with most energy
 
         energy_acc = np.linalg.norm(self.acc_xyz, axis=0, ord=2)
@@ -406,38 +414,52 @@ class segmentation_handle():
 
         acc_t_intp, acc_s_intp, gyr_t_intp, gyr_s_intp = self.time_stamp_alignment(acc_s_f, gyr_s_f, oFs)
 
-        multiplied_signal = gyr_s_intp * acc_s_intp 
+        multiplied_signal = (gyr_s_intp + acc_s_intp) * (gyr_s_intp + acc_s_intp) 
+        # multiplied_signal = gyr_s_intp * acc_s_intp 
         
-        
-        # signal preprocessing
-        multiplied_signal_f = signal_filter(multiplied_signal, fs=oFs, fstop=30, btype='highpass')
-        multiplied_signal_f = signal.hilbert(multiplied_signal_f)
-        power_signal = energy_calculation(np.abs(multiplied_signal_f), 200)
-        power_signal = 10 * normalization(power_signal, 0)
-        # Otus thresholding
-        threshold = otus_implementation(1000, np.log(power_signal + 1))
-        # import matplotlib.pyplot as plt
-        # plt.subplot(2,1,2)
-        # plt.plot(np.log(power_signal + 1))
-        # plt.subplot(2,1,1)
-        # plt.plot(multiplied_signal)
-        # plt.show()
-        # Correction segmentation
-        segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, 200, 200, 0.2 * oFs)
-        segmentation_time = acc_t_intp[segmentation_idx]
+        if filter_type == 1:
+            multiplied_signal_f = signal_filter(multiplied_signal, fs=oFs, fstop=40, btype='lowpass')
+            power_signal = np.abs(non_linear_factor * multiplied_signal_f)
+            threshold = otus_implementation(1000, np.log(power_signal + 1))
+            segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, 200, 200, 0.3 * oFs)
+            segmentation_time = acc_t_intp[segmentation_idx]
+        else:
+            # signal preprocessing
+            multiplied_signal_f = signal_filter(multiplied_signal, fs=oFs, fstop=50, btype='highpass')
+            multiplied_signal_f = signal.hilbert(multiplied_signal_f)
+            power_signal = energy_calculation(np.abs(multiplied_signal_f), 200)
+            power_signal = non_linear_factor * normalization(power_signal, 0)
+            # Otus thresholding
+            threshold = otus_implementation(1000, np.log(power_signal + 1))
+            segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, 200, 200, 0.3 * oFs)
+            segmentation_time = acc_t_intp[segmentation_idx]
+            # import matplotlib.pyplot as plt
+            # plt.subplot(2,1,2)
+            # plt.plot(np.log(power_signal + 1))
+            # plt.subplot(2,1,1)
+            # plt.plot(multiplied_signal)
+            # plt.show()
+            # Correction segmentation
         # if len(segmentation_time) != 2:
         #     print(segmentation_idx)
-        #     import matplotlib.pyplot as plt
-        #     plt.subplot(4,1,1)
-        #     plt.plot(acc_s_intp)
-        #     plt.subplot(4,1,2)
-        #     plt.plot(gyr_s_intp)
-        #     plt.subplot(4,1,3)
-        #     plt.plot(multiplied_signal)
-        #     plt.subplot(4,1,4)
-        #     _xn = np.arange(len(power_signal))
-        #     plt.plot(_xn,np.log(power_signal + 1),_xn,threshold * np.ones(_xn.shape))
-        #     plt.show()
+        if is_plot == True:
+            import matplotlib.pyplot as plt
+            plt.subplot(4,1,1)
+            plt.plot(acc_s_intp)
+            plt.title("Interpolated Accelerometer data")
+            plt.subplot(4,1,2)
+            plt.plot(gyr_s_intp)
+            plt.title("Interpolated Gyroscope data")
+            plt.subplot(4,1,3)
+            plt.plot(multiplied_signal)
+            plt.title("Multiplied Data")
+            plt.subplot(4,1,4)
+            _xn = np.arange(len(power_signal))
+            plt.plot(_xn,np.log(power_signal + 1),_xn,threshold * np.ones(_xn.shape),linestyle="solid")
+            plt.legend("Envelop","")
+            plt.title("Envelop of data")
+            plt.tight_layout()
+            plt.show()
 
 
 
