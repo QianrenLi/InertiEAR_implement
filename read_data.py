@@ -174,7 +174,7 @@ def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,acc_nois
     for i in range(3):
         acc_xyz[:, i] = signal.wiener(acc_xyz[:, i] ,noise=acc_noise[i])
         gyr_xyz[:, i] = signal.wiener(gyr_xyz[:, i] ,noise=gyr_noise[i])
-
+    
 
     for i in range(len(acc_t_idx)):
         acc_s.append(normalization(dimension_reduction(acc_xyz[acc_t_idx[i, 0]:acc_t_idx[i, 1], :]), 0))
@@ -239,7 +239,8 @@ def energy_calculation(input_signal, window_size):
     power_signal = np.zeros(power_signal_width)
     input_signal = np.pad(input_signal, (window_size,), constant_values=(0, 0))
     for i in range(power_signal_width):
-        power_signal[i] = np.sum(np.power(input_signal[i:i + window_size], 2))
+        # power_signal[i] = np.sum(np.power(input_signal[i:i + window_size], 2))
+        power_signal[i] = np.mean(np.power(input_signal[i:i + window_size], 2))
     return power_signal
 
 
@@ -406,7 +407,7 @@ class segmentation_handle():
         return acc_t_intp, acc_s_intp, gyr_t_intp, gyr_s_intp
 
     def segmentation(self, oFs, noise_acc, noise_gyr, is_plot = False, non_linear_factor = 10, filter_type = 0, 
-                     Energy_WIN = 200, Duration_WIN = 210, Expanding_Range = 0.3):
+                     Energy_WIN = 200, Duration_WIN = 210, Expanding_Range = 0.3, is_test = False):
         # Need to select axix with most energy
 
         energy_acc = np.linalg.norm(self.acc_xyz, axis=0, ord=2)
@@ -425,9 +426,19 @@ class segmentation_handle():
         
         multiplied_signal = result_signal * result_signal
         # multiplied_signal = gyr_s_intp * acc_s_intp 
+        # f, t, Zxx = scipy.signal.stft(multiplied_signal,fs = 400)
+        # import matplotlib.pyplot as plt
+        # plt.imshow(np.log2(abs(Zxx)),origin = 'lower',aspect='auto')
+        # plt.yticks(np.linspace(0,len(f)-1,5),f[np.linspace(0,len(f)-1,5).astype(np.int32)])
+        # plt.xticks(np.linspace(0,len(t)-1,5),t[np.linspace(0,len(t)-1,5).astype(np.int32)])
+        # plt.title("Specturum Example")
+        # plt.ylabel("Frequency")
+        # plt.xlabel("Time sample")
+        # plt.show()
         
         if filter_type == 1:
-            multiplied_signal_f = signal_filter(multiplied_signal, fs=oFs, fstop=40, btype='lowpass')
+            multiplied_signal = abs(multiplied_signal)
+            multiplied_signal_f = signal_filter(multiplied_signal, fs=oFs, fstop=20, btype='lowpass')
             power_signal = np.abs(non_linear_factor *normalization(multiplied_signal_f,0))
             threshold = otus_implementation(1000, np.log(power_signal + 1))
             segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, Energy_WIN, Duration_WIN, Expanding_Range * oFs)
@@ -453,7 +464,7 @@ class segmentation_handle():
         #     print(segmentation_idx)
         if is_plot == True:
             import matplotlib.pyplot as plt
-            plt.figure(figsize=(16,8))
+            # plt.figure(figsize=(16,8))
             plt.subplot(4,1,1)
             plt.plot(acc_s_intp)
             plt.title("Interpolated Accelerometer data")
@@ -468,12 +479,13 @@ class segmentation_handle():
             line1, = plt.plot(_xn,np.log(power_signal + 1))
             line2, = plt.plot(_xn,threshold * np.ones(_xn.shape))
             # plt.plot(_xn,np.log(power_signal + 1),_xn,threshold * np.ones(_xn.shape),linestyle="solid")
-            plt.legend(handles= [line1,line2],labels = ["Envelop","Threshold"],loc='best')
+            plt.legend(handles= [line1,line2],labels = ["Envelop","Threshold"], loc='best')
             plt.title("Envelop of data")
             plt.tight_layout()
             plt.show()
 
-
+        if is_test:
+            return segmentation_time,segmentation_idx
 
         # Paper filtering
         # power_signal = signal_filter(multiplied_signal,fs=oFs,fstop= 20, btype='lowpass')
