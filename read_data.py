@@ -1,4 +1,6 @@
 import math, random
+import os
+
 import torch
 import torchaudio
 from torchaudio import transforms
@@ -101,6 +103,12 @@ def pre_processing_example(isMel_spec=True):
     plt.show()
 
 
+def PSNR(input_signal):
+    variance = np.var(input_signal)
+    mean_value = np.mean(input_signal)
+    MSE_value = np.power(mean_value,2) + variance
+    return np.max(np.abs(input_signal))/MSE_value
+
 def signal_read(PATH):
     with open(PATH, 'r') as f:
         acc_content = f.read()
@@ -175,20 +183,57 @@ def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,acc_nois
         acc_xyz[:, i] = signal.wiener(acc_xyz[:, i] ,noise=acc_noise[i])
         gyr_xyz[:, i] = signal.wiener(gyr_xyz[:, i] ,noise=gyr_noise[i])
 
+    
 
     for i in range(len(acc_t_idx)):
         acc_s.append(normalization(dimension_reduction(acc_xyz[acc_t_idx[i, 0]:acc_t_idx[i, 1], :]), 0))
         gyr_s.append(normalization(dimension_reduction(gyr_xyz[gyr_t_idx[i, 0]:gyr_t_idx[i, 1], :]), 0))
-
+    
+    
+    import matplotlib.pyplot as plt
+    import matplotlib.ticker as mtick
+    # fig = plt.figure()
+    # ax = fig.add_subplot(311)
+    # ax.plot(acc_xyz[acc_t_idx[0, 0]:acc_t_idx[0, 1],0])
+    # ax.set_ylabel("x axis")
+    # ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2f'))
+    # ax.set_title("Three axis of Accerelator")
+    # ax = fig.add_subplot(312)
+    # ax.plot(acc_xyz[acc_t_idx[0, 0]:acc_t_idx[0, 1],1])
+    # ax.set_ylabel("y axis")
+    # ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2f'))
+    # ax = fig.add_subplot(313)
+    # ax.plot(acc_xyz[acc_t_idx[0, 0]:acc_t_idx[0, 1],2])
+    # ax.set_ylabel("z axis")
+    # ax.yaxis.set_major_formatter(mtick.FormatStrFormatter('%.2f'))
+    # # plt.tight_layout()
+    # plt.show()
+    
+    # plt.subplot(2,1,1)
+    # plt.plot(acc_s[0])
+    # plt.title("Acc Signal")
+    # plt.subplot(2,1,2)
+    # plt.plot(gyr_s[0])
+    # plt.title("Gyr Signal")
+    # plt.tight_layout()
+    # plt.show()
+    
     out_signal = []
     for i in range(len(acc_s)):
-        _, t_s = concate_time(acc_t[acc_t_idx[i, 0]:acc_t_idx[i, 1]], acc_s[i], gyr_t[gyr_t_idx[i, 0]:gyr_t_idx[i, 1]],
-                              gyr_s[i])
-        
-        # High frequency suppression
-        t_s = high_frequency_suppression(t_s,800)
-        # print(t_s)
-        out_signal.append(t_s)
+        try:
+            _, t_s = concate_time(acc_t[acc_t_idx[i, 0]:acc_t_idx[i, 1]], acc_s[i],
+                                  gyr_t[gyr_t_idx[i, 0]:gyr_t_idx[i, 1]],
+                                  gyr_s[i])
+            # import matplotlib.pyplot as plt
+            # plt.plot(t_s)
+            # plt.title("Concated Signal")
+            # plt.show()
+            # High frequency suppression
+            t_s = high_frequency_suppression(t_s, 800)
+            # print(t_s)
+            out_signal.append(t_s)
+        except:
+            print("concate error")
 
     return out_signal
 
@@ -239,14 +284,16 @@ def energy_calculation(input_signal, window_size):
     power_signal = np.zeros(power_signal_width)
     input_signal = np.pad(input_signal, (window_size,), constant_values=(0, 0))
     for i in range(power_signal_width):
-        power_signal[i] = np.sum(np.power(input_signal[i:i + window_size], 2))
+        # power_signal[i] = np.sum(np.power(input_signal[i:i + window_size], 2))
+        # power_signal[i] = np.median(np.abs(input_signal[i:i + window_size]))
+        power_signal[i] = np.mean(np.abs(input_signal[i:i + window_size]))
     return power_signal
 
 
 # Do convolution
 
 def otus_implementation(Fs, energy_signal):
-    maximum_value = np.max(energy_signal) / 3
+    maximum_value = np.max(energy_signal) 
     precision = maximum_value / Fs
     histgram = np.zeros(Fs + 1)
     # Contruct histgram
@@ -259,6 +306,7 @@ def otus_implementation(Fs, energy_signal):
 
     # normalize histgram
     histgram = histgram / np.sum(histgram)
+    histgram[histgram < 0.2/Fs] = 0
     weighted_hist = np.multiply(histgram, np.linspace(0, maximum_value, num=Fs + 1, endpoint=True))
     global_val = sum(weighted_hist)
     cum_hist = np.cumsum(histgram)
@@ -285,7 +333,6 @@ def otus_implementation(Fs, energy_signal):
 
 # def bic_segmentation(seg_signal, W_MIN, W_MAX, N_SHIFT):
     
-
 
 def segmentation_correct(seg_signal, threshold, duration_threshold, window_size, extend_region):
     index = seg_signal < threshold
@@ -362,8 +409,68 @@ def segmentation_correct(seg_signal, threshold, duration_threshold, window_size,
     # print(segmented_idx)
     return segmented_idx
 
-    # print(np.nonzero(diff_idx))
+    # print(np.nonzero(diff_idx))    
 
+def window_energy_computation(xyz_data,window_size):
+    power_signal = np.zeros(3)
+    for i in range(3):
+        power_signal_width = len(xyz_data[:,i])
+        input_signal = np.pad(xyz_data[:,i].flatten(), (window_size,), constant_values=(0, 0))
+        input_signal = median_filter(input_signal,7)
+        # signal_var = 3 * np.var(input_signal)
+        # print(signal_var)
+        # input_signal[abs(input_signal) > signal_var] = signal_var
+        # input_signal = normalization(input_signal,1)
+        # import matplotlib.pyplot as plt
+        # plt.plot(input_signal)
+        # plt.show()
+        for j in range(power_signal_width):
+            # power_signal[i] = np.sum(np.power(input_signal[i:i + window_size], 2))
+            power_signal[i] += np.mean(np.abs(input_signal[j:j + window_size]))
+        
+    return power_signal
+
+def median_filter(input_signal,window_size):
+    _input_signal = np.pad(input_signal, (window_size,), constant_values=(0, 0))
+    for i in range(len(input_signal)):
+        input_signal[i] = np.median(_input_signal[i:i+window_size])
+    return input_signal
+
+def spectral_entropy_calculation(xyz_data):
+    power_signal = np.zeros(3)
+    for i in range(3):
+        input_signal = xyz_data[:,i].flatten()
+        input_signal = normalization(input_signal,1)
+        signal_spec = np.power(np.fft.fft(input_signal),2)
+        probability_distribution = signal_spec/sum(signal_spec)
+        power_signal[i] = sum(probability_distribution * np.log2(probability_distribution))/np.log2(len(input_signal))
+    return power_signal
+
+def create_hist(energy_signal,Fs):
+    maximum_value = np.max(energy_signal)
+    precision = maximum_value  / Fs
+    histgram = np.zeros(Fs + 1)
+    # Contruct histgram
+    for i in range(len(energy_signal)):
+        t_val = energy_signal[i]
+        if t_val > maximum_value:
+            t_val = maximum_value
+        idx = int(np.floor(np.floor(t_val / precision)))
+        histgram[idx] += 1
+
+    # normalize histgram
+    histgram = histgram / np.sum(histgram)
+    return histgram
+
+def entropy_calculation(xyz_data):
+    power_signal = np.zeros(3)
+    for i in range(3):
+        input_signal = np.abs(xyz_data[:,i].flatten())
+        
+        probability_distribution = create_hist(input_signal,10000)
+        power_signal[i] = sum(probability_distribution * np.log2(probability_distribution))/np.log2(len(input_signal))
+    return power_signal
+        
 
 class segmentation_handle():
     def __init__(self, acc_xyz, gyr_xyz, acc_t, gyr_t, Fs) -> None:
@@ -406,42 +513,85 @@ class segmentation_handle():
         return acc_t_intp, acc_s_intp, gyr_t_intp, gyr_s_intp
 
     def segmentation(self, oFs, noise_acc, noise_gyr, is_plot = False, non_linear_factor = 10, filter_type = 0, 
-                     Energy_WIN = 200, Duration_WIN = 210, Expanding_Range = 0.3):
+                     Energy_WIN = 200, Duration_WIN = 210, Expanding_Range = 0.3, is_test = False,is_auto_threshold = False):
         # Need to select axix with most energy
-
-        energy_acc = np.linalg.norm(self.acc_xyz, axis=0, ord=2)
-        energy_gyr = np.linalg.norm(self.gyr_xyz, axis=0, ord=2)
-
+            
+        for i in range(3):
+            self.acc_xyz[:, i] = signal.wiener(self.acc_xyz[:, i] ,noise=noise_acc[i])
+            self.gyr_xyz[:, i] = signal.wiener(self.gyr_xyz[:, i] ,noise=noise_gyr[i])
+        energy_acc = window_energy_computation(self.acc_xyz, window_size = 20)
+        energy_gyr = window_energy_computation(self.gyr_xyz, window_size = 20)
+        # energy_acc = spectral_entropy_calculation(self.acc_xyz)
+        # energy_gyr = spectral_entropy_calculation(self.gyr_xyz)
+        # energy_acc = entropy_calculation(self.acc_xyz)
+        # energy_gyr = entropy_calculation(self.gyr_xyz)
+        # energy_acc = np.linalg.norm(self.acc_xyz, axis=0, ord=2)
+        # energy_gyr = np.linalg.norm(self.gyr_xyz, axis=0, ord=2)
+        # import matplotlib.pyplot as plt
+        # fig = plt.figure()
+        # ax = fig.add_subplot(311)
+        # ax.plot(self.acc_xyz[:,0])
+        # ax = fig.add_subplot(312)
+        # ax.plot(self.acc_xyz[:,1])
+        # ax.set_ylabel("y axis")
+        # ax = fig.add_subplot(313)
+        # ax.plot(self.acc_xyz[:,2])
+        # ax.set_ylabel("z axis")
+        # # plt.tight_layout()
+        # plt.show()
+        
+        # acc_s = self.acc_xyz[:, np.argmax(energy_acc)]
+        # gyr_s = self.gyr_xyz[:, np.argmax(energy_gyr)]
         acc_s = self.acc_xyz[:, np.argmax(energy_acc)]
         gyr_s = self.gyr_xyz[:, np.argmax(energy_gyr)]
-
-        acc_s_f = signal.wiener(acc_s, noise=None)
-        gyr_s_f = signal.wiener(gyr_s, noise=None)
         
+
+        acc_s_f = acc_s
+        gyr_s_f = gyr_s
+
 
         acc_t_intp, acc_s_intp, gyr_t_intp, gyr_s_intp = self.time_stamp_alignment(acc_s_f, gyr_s_f, oFs)
 
         result_signal = normalization(acc_s_intp,1) + 0.5 *  normalization(gyr_s_intp,1)
         
         multiplied_signal = result_signal * result_signal
+        
+        multiplied_signal = median_filter(multiplied_signal,7)
         # multiplied_signal = gyr_s_intp * acc_s_intp 
+        # f, t, Zxx = scipy.signal.stft(multiplied_signal,fs = 400)
+        # import matplotlib.pyplot as plt
+        # plt.imshow(np.log2(abs(Zxx)),origin = 'lower',aspect='auto')
+        # plt.yticks(np.linspace(0,len(f)-1,5),f[np.linspace(0,len(f)-1,5).astype(np.int32)])
+        # plt.xticks(np.linspace(0,len(t)-1,5),t[np.linspace(0,len(t)-1,5).astype(np.int32)])
+        # plt.title("Specturum Example")
+        # plt.ylabel("Frequency")
+        # plt.xlabel("Time sample")
+        # plt.show()
+
         
         if filter_type == 1:
-            multiplied_signal_f = signal_filter(multiplied_signal, fs=oFs, fstop=40, btype='lowpass')
+            multiplied_signal = abs(multiplied_signal)
+            multiplied_signal_f = signal_filter(multiplied_signal, fs=oFs, fstop=20, btype='lowpass')
             power_signal = np.abs(non_linear_factor *normalization(multiplied_signal_f,0))
             threshold = otus_implementation(1000, np.log(power_signal + 1))
             segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, Energy_WIN, Duration_WIN, Expanding_Range * oFs)
             segmentation_time = acc_t_intp[segmentation_idx]
+            segmentation_idx = np.reshape(segmentation_idx/(oFs/self.Fs),(-1,2))
         else:
             # signal preprocessing
             multiplied_signal_f = signal_filter(multiplied_signal, fs=oFs, fstop=50, btype='highpass')
             multiplied_signal_f = signal.hilbert(multiplied_signal_f)
             power_signal = energy_calculation(np.abs(multiplied_signal_f), Energy_WIN)
+            if is_auto_threshold:
+                non_linear_factor = PSNR(power_signal)/10
+
             power_signal = non_linear_factor * normalization(power_signal, 0)
+            
             # Otus thresholding
             threshold = otus_implementation(10000, np.log(power_signal + 1))
             segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, Energy_WIN, Duration_WIN, Expanding_Range * oFs)
             segmentation_time = acc_t_intp[segmentation_idx]
+            segmentation_idx = np.reshape(segmentation_idx/(oFs/self.Fs),(-1,2))
             # import matplotlib.pyplot as plt
             # plt.subplot(2,1,2)
             # plt.plot(np.log(power_signal + 1))
@@ -453,7 +603,7 @@ class segmentation_handle():
         #     print(segmentation_idx)
         if is_plot == True:
             import matplotlib.pyplot as plt
-            plt.figure(figsize=(16,8))
+            # plt.figure(figsize=(16,8))
             plt.subplot(4,1,1)
             plt.plot(acc_s_intp)
             plt.title("Interpolated Accelerometer data")
@@ -468,16 +618,17 @@ class segmentation_handle():
             line1, = plt.plot(_xn,np.log(power_signal + 1))
             line2, = plt.plot(_xn,threshold * np.ones(_xn.shape))
             # plt.plot(_xn,np.log(power_signal + 1),_xn,threshold * np.ones(_xn.shape),linestyle="solid")
-            plt.legend(handles= [line1,line2],labels = ["Envelop","Threshold"],loc='best')
+            plt.legend(handles= [line1,line2],labels = ["Envelop","Threshold"], loc='best')
             plt.title("Envelop of data")
             plt.tight_layout()
             plt.show()
 
-
+        if is_test:
+            return segmentation_time,segmentation_idx
 
         # Paper filtering
         # power_signal = signal_filter(multiplied_signal,fs=oFs,fstop= 20, btype='lowpass')
-        return segmentation_time
+        return segmentation_idx
 
     def time2index(self, segmentation_time):
         acc_t = self.acc_t
@@ -523,19 +674,22 @@ def data_processing(acc_path,gyr_path,file_directory,label):
     
     h_seg = segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, Fs = 400)
     
-    segmentation_time = h_seg.segmentation(oFs = 2000, noise_acc = noise_acc, noise_gyr = noise_gyr,is_plot= False,non_linear_factor= 10000,filter_type= 0,Energy_WIN = 400,Duration_WIN = 500,Expanding_Range = 0.2)
+    segmentation_idx = h_seg.segmentation(oFs = 2000, noise_acc = noise_acc, noise_gyr = noise_gyr,
+                                                            is_plot= False,non_linear_factor= 1000,filter_type= 0,
+                                                            is_test = False,is_auto_threshold = True)
     
-    acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
+    # acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
     
-    seg_signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,noise_acc,noise_gyr)
+    seg_signal = pre_processing(acc_xyz, gyr_xyz, segmentation_idx, segmentation_idx, acc_t, gyr_t,noise_acc,noise_gyr)
     import os
     voice_number = 0
     for cur_file_name in os.listdir(file_directory):
         if cur_file_name.startswith("signal"):
             _voice_number = int(cur_file_name.replace(".npy", "").replace("signal_", "").split("_")[2])
             voice_number = max(voice_number,_voice_number)
-    
+    print(len(seg_signal))
     for i in range(len(seg_signal)):
+        print("signal len: ", len(seg_signal[i]))
         np.save(("%ssignal_1_%d_%d") % (file_directory,label,i + voice_number + 1),seg_signal[i])
     
     # Use example
@@ -588,87 +742,31 @@ def read_data_from_path(path):
 
 
 if __name__ == "__main__":
-    # path = "./files_individual/files_0_1/"
-    path = "./files_individual/files_3_5_7_9/"
-    # import os
-    # os.environ['KMP_DUPLICATE_LIB_OK']='True'
-    # path = "./data_test/"
-    # data_processing(file_directory="./files_individual/files_0/",acc_path="./files_individual/test/speed_test/acc_slow_200_0.txt",gyr_path="files_individual/test/speed_test/acc_slow_200_0.txt",label= 0)
-    # read_data_from_path(path)
+    in_dir_path = "files_train/original_data_new"
+    out_dir_path = "files_train/signal_data_new"
+    for file_name in os.listdir(in_dir_path):
+        if file_name.count("acc"):
+            acc_file = file_name
+            gyr_file = file_name.replace("acc", "gyr")
+            label = int(file_name.replace(".txt", "").split("_")[-2])
+            print(acc_file, gyr_file, label)
+            out_dir_path_i = out_dir_path + "/files_" + str(label)
+            if not os.path.isdir(out_dir_path_i):
+                os.mkdir(out_dir_path_i)
+            data_processing(acc_path=in_dir_path + "/" + acc_file, gyr_path=in_dir_path + "/" + gyr_file,
+                            file_directory=out_dir_path_i + "/", label=label)
 
-    # noise_acc, noise_gyr = noise_computation("./files_0_4/files/acc_1_999_999.txt", "./files_0_4/files/gyr_1_999_999.txt")
-    #
-    # # Open Acc and Gyro
-    # # acc_PATH = "./data/acczero4.txt"
-    # # gyr_PATH = "./data/gyrzero4.txt"
-    #
-    # # Open HW path
-    # acc_PATH = "./files_0_4/files/acc_1_0_20.txt"
-    # gyr_PATH = "./files_0_4/files/gyr_1_0_20.txt"
-    #
-    # acc_t, acc_xyz = signal_read(acc_PATH)
-    # gyr_t, gyr_xyz = signal_read(gyr_PATH)
-    #
-    # acc_xyz = remove_mean_value(acc_xyz)
-    # gyr_xyz = remove_mean_value(gyr_xyz)
-    #
-    # # For each segmentation segments, reinitialize this
-    # h_seg = segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, 400)
-    #
-    # # Signal space reduction
-    # # import numpy as np
-    #
-    # segmentation_time = h_seg.segmentation(2000, noise_acc, noise_gyr)
-    # acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
-    #
-    # # print(np.argmax(np.abs([-1,2,-5])))
-    # # import matplotlib.pyplot as plt
-    # # plt.figure
-    # # plt.plot(gyr_s_intp)
-    # # plt.show()
-    #
-    # signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t)
-    #
-    # if len(signal) != 5:
-    #     print("Error, signal length is not 5 ", len(signal))
-    #
-    # # max_len = 0
-    # # average_len = 0
-    # # for i in range(3):
-    # #   import matplotlib.pyplot as plt
-    # #   plt.figure
-    # #   plt.plot(acc_xyz[:,i])
-    # #   # generate spectrogram for signal[i]
-    # #   # transform = torchaudio.transforms.Spectrogram(n_fft=400)
-    # #   # spec = transform(torch.tensor(signal[i]))
-    # #   # plt.specgram(signal[i],Fs=400)
-    # #   plt.show()
-    #
-    # # import scipy
-    # # # TODO: Need a noise power
-    # # acc_s_f = scipy.signal.wiener(acc_s,noise = None)
-    # # gyr_s_f = scipy.signal.wiener(gyr_s,noise = None)
-    #
-    # # Wiener filterig reuslt display
-    # # import matplotlib.pyplot as plt
-    # # plt.subplot(2,2,1)
-    # # plt.plot(acc_s)
-    # # plt.subplot(2,2,2)
-    # # plt.plot(acc_s_f)
-    # # plt.subplot(2,2,3)
-    # # plt.plot(gyr_s)
-    # # plt.subplot(2,2,4)
-    # # plt.plot(gyr_s_f)
-    # # plt.show()
-    #
-    # # Nomalize
-    # # time,signal = concate_time(acc_t,acc_s,gyr_t,gyr_s)
-    # # import matplotlib.pyplot as plt
-    #
-    # # plt.plot(signal)
-    # # plt.plot(gyr_t)
-    # # plt.show()
-    #
-    # # pre_processing_example(isMel_spec= False)
-    # # print(type(sgram.numpy()))
-    # # print(sgram)
+    # max_signal_len = 0
+    # total_signal_len = 0
+    # count = 0
+    # for i in range(0, 10):
+    #     data_dir = out_dir_path + "/files_" + str(i)
+    #     for file_name in os.listdir(data_dir):
+    #         signal = np.load(data_dir + "/" + file_name)
+    #         cur_len = len(signal)
+    #         if cur_len > max_signal_len:
+    #             max_signal_len = cur_len
+    #         total_signal_len += cur_len
+    #         count += 1
+    #         print(str(i) + ": ", cur_len, " max_signal_len: ", max_signal_len,
+    #               " average_signal_len: ", total_signal_len / count, " count: ", count)
