@@ -36,5 +36,5 @@ where `in_dir_path` denotes the path where the original data exist and `out_dir_
 Num of epoch recommended to less 20 epochs for SENet.py to avoid overffiting.
 ## Result Display
 An implemented function `segmentation` in `read_data.py` can be used to display the segmentation process with input `is_plot = True`.
-This function should called first by estiblish a segmentation handler as `h_seg = read_data.segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t` should be , Fs = 400)`
+This function should called first by estiblish a segmentation handler as `h_seg = read_data.segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t should be , Fs = 400)`
 where the `acc_xyz, gyr_xyz,acc_t,gyr_t` should be read by `read_data.signal_read(path)` where `path` is the cellphone sampled IMU data in `txt` format.
