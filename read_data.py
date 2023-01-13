@@ -365,6 +365,7 @@ def segmentation_correct(seg_signal, threshold, duration_threshold, window_size,
     if len(cross_idx) % 2 != 0:
         # pad front
         if diff_idx[cross_idx[0]] > 0:
+        if diff_idx[cross_idx[0]] > 0:
             cross_idx = np.insert(cross_idx, 0, 0)
         # pad back
         else:
@@ -428,6 +429,7 @@ def segmentation_correct(seg_signal, threshold, duration_threshold, window_size,
     # print(segmented_idx)
     # print(len(segmented_idx))
     # print(segmented_idx)
+    return segmented_idx
     return segmented_idx
 
     # print(np.nonzero(diff_idx))    
@@ -512,7 +514,11 @@ class segmentation_handle():
         acc_t = np.linspace(np.min(acc_t),np.max(acc_t),len(acc_t))
         gyr_t = np.linspace(np.min(gyr_t),np.max(gyr_t),len(gyr_t))
         acc_s = acc_s.flatten()
+        acc_t = np.linspace(np.min(acc_t),np.max(acc_t),len(acc_t))
+        gyr_t = np.linspace(np.min(gyr_t),np.max(gyr_t),len(gyr_t))
+        acc_s = acc_s.flatten()
         gyr_s = gyr_s.flatten()
+        
         
         time_stamp_end = min(np.max(acc_t), np.max(gyr_t))
         # Length of the signal
@@ -672,6 +678,7 @@ class segmentation_handle():
             if idx == idx_length:
                 break
 
+
         idx = 0
         for j in range(len(gyr_t)):
             if gyr_t[j] >= segmentation_time[idx]:
@@ -805,3 +812,4 @@ if __name__ == "__main__":
     #         count += 1
     #         print(str(i) + ": ", cur_len, " max_signal_len: ", max_signal_len,
     #               " average_signal_len: ", total_signal_len / count, " count: ", count)
+
