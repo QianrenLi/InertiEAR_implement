@@ -45,8 +45,8 @@ noise_acc, noise_gyr = rd.noise_computation("./files_individual/noise/acc_1_999_
 # acc_path = "./files_0_4/files/acc_1_0_30.txt"
 # gyr_path = "./files_0_4/files/gyr_1_0_30.txt"
 
-acc_path = "file_test/final_test/acc_1_10_101.txt"
-gyr_path = "file_test/final_test/gyr_1_10_101.txt"
+acc_path = "files_train/original_data_new/acc_1_0_0.txt"
+gyr_path = "files_train/original_data_new/gyr_1_0_0.txt"
 
 # Auto factor 0.1358695652173913
 # acc_path = "file_test/speed_test/acc_1100_0.txt"
@@ -98,11 +98,11 @@ gyr_t = w * _temp + b
 # plt.plot(gyr_t)
 # plt.show()
 
-# Fs = 400
-# acc_xyz = acc_xyz[int(Fs):int(len(acc_xyz) - Fs),:]
-# gyr_xyz = gyr_xyz[int(Fs):int(len(gyr_xyz) - Fs),:]
-# acc_t   = acc_t[int(Fs):int(len(acc_t) - Fs)]
-# gyr_t  = gyr_t[int(Fs):int(len(gyr_t)- Fs)]
+Fs = 400
+acc_xyz = acc_xyz[int(Fs):int(len(acc_xyz) - Fs),:]
+gyr_xyz = gyr_xyz[int(Fs):int(len(gyr_xyz) - Fs),:]
+acc_t   = acc_t[int(Fs):int(len(acc_t) - Fs)]
+gyr_t  = gyr_t[int(Fs):int(len(gyr_t)- Fs)]
 
 # Remove mean value
 acc_xyz = rd.remove_mean_value(acc_xyz)
@@ -118,7 +118,7 @@ h_seg = rd.segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, Fs = 400)
 
 # print(segmentation_check(reference_point,segmentation_idx))
 segmentation_time,segmentation_idx = h_seg.segmentation(oFs = 2000, noise_acc = noise_acc, noise_gyr = noise_gyr,is_plot= True,non_linear_factor= 100000,filter_type= 0,
-Energy_WIN = 200,Duration_WIN = 500,Expanding_Range = 0.2,is_test = True,is_auto_threshold = False)
+Energy_WIN = 200,Duration_WIN = 500,Expanding_Range = 0.2,is_test = True,is_auto_threshold = True)
 
 # print(segmentation_check(reference_point,segmentation_idx))
 ##################### Segmentation Error ############
@@ -145,7 +145,7 @@ print(len(seg_signal))
 from SENet import SENet
 from data_loader import generate_signal, convert_to_spec, pad_trunc, get_silence_noise
 
-myModel = torch.load("./model/se_type_2_net.pth")
+myModel = torch.load("./model/se_type_2_net.pth", map_location=torch.device('cpu'))
 # myModel = torch.load("./model/se_type_0_net.pth")
 # map_location=torch.device('cpu')
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
