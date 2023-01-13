@@ -9,8 +9,8 @@ import numpy as np
 def training(model, train_dl, val_dl, num_epochs):
     # Loss Function, Optimizer and Scheduler
     criterion = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.0005)
-    scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.0005,
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.0001)
+    scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer, max_lr=0.0001,
                                                     steps_per_epoch=int(len(train_dl)),
                                                     epochs=num_epochs,
                                                     anneal_strategy='linear')

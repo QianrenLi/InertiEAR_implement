@@ -248,7 +248,7 @@ def concate_time(acc_t, acc_s, gyr_t, gyr_s):
     # print(_idx)
     t = _t[_idx]
     s = _s[_idx]
-
+    # return acc_t,acc_s
     return t, s
 
 

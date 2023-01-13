@@ -39,12 +39,18 @@ noise_acc, noise_gyr = rd.noise_computation("./files_individual/noise/acc_1_999_
 # acc_path = "./files_0_4/files/acc_1_0_30.txt"
 # gyr_path = "./files_0_4/files/gyr_1_0_30.txt"
 
-acc_path = "./files_train/original_data_new/acc_1_2_0.txt"
-gyr_path = "./files_train/original_data_new/gyr_1_2_0.txt"
+acc_path = "file_test/final_test/acc_1_10_10.txt"
+gyr_path = "file_test/final_test/gyr_1_10_10.txt"
 # reference_point = np.linspace( 8300, 744000, 201)
 # Original Signal Display
 acc_t, acc_xyz = rd.signal_read(acc_path)
 gyr_t, gyr_xyz = rd.signal_read(gyr_path)
+
+factor = 0.9
+acc_xyz = acc_xyz[int(len(acc_xyz)*0.1):int(len(acc_xyz)*factor),:]
+gyr_xyz = gyr_xyz[int(len(gyr_xyz)*0.1):int(len(gyr_xyz)*factor),:]
+acc_t   = acc_t[int(len(acc_t)*0.1):int(len(acc_t)*factor)]
+gyr_t  = gyr_t[int(len(gyr_t)*0.1):int(len(gyr_t)*factor)]
 
 # Remove mean value
 acc_xyz = rd.remove_mean_value(acc_xyz)
@@ -59,7 +65,8 @@ h_seg = rd.segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, Fs = 400)
 # segmentation_time,segmentation_idx = h_seg.segmentation(oFs = 2000, noise_acc = noise_acc, noise_gyr = noise_gyr,is_plot= True,non_linear_factor= 10000,filter_type= 0,Energy_WIN = 200,Duration_WIN = 500,Expanding_Range = 0.2,is_test = True)
 
 # print(segmentation_check(reference_point,segmentation_idx))
-segmentation_time,segmentation_idx = h_seg.segmentation(oFs = 2000, noise_acc = noise_acc, noise_gyr = noise_gyr,is_plot= True,non_linear_factor= 1000,filter_type= 0,is_test = True,is_auto_threshold = True)
+segmentation_time,segmentation_idx = h_seg.segmentation(oFs = 2000, noise_acc = noise_acc, noise_gyr = noise_gyr,is_plot= True,non_linear_factor= 1000,filter_type= 0,
+Energy_WIN = 200,Duration_WIN = 500,Expanding_Range = 0.2,is_test = True,is_auto_threshold = True)
 
 # print(segmentation_check(reference_point,segmentation_idx))
 ##################### Segmentation Error ############
@@ -76,67 +83,67 @@ print(len(seg_signal))
 
 
 
-# import matplotlib.pyplot as plt
-# for i in range(len(seg_signal)):
-#     plt.plot(seg_signal[i])
-#     plt.show()
-# # print(acc_t_idx)
+import matplotlib.pyplot as plt
+for i in range(len(seg_signal)):
+    plt.plot(seg_signal[i])
+    plt.show()
+# print(acc_t_idx)
 
-# # Result Validation
-# from SENet import SENet
-# from data_loader import generate_signal, convert_to_spec, pad_trunc, get_silence_noise
-# myModel = SENet()
-# myModel = torch.load("./model_good/new/se_net_66.pth",map_location=torch.device('cpu'))
-# # map_location=torch.device('cpu')
-# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-# # device = torch.device("cpu")
-# myModel = myModel.to(device)
-# ## Inference
-# max_len = 800
+# Result Validation
+from SENet import SENet
+from data_loader import generate_signal, convert_to_spec, pad_trunc, get_silence_noise
+myModel = SENet()
+myModel = torch.load("./model/se_net.pth",map_location=torch.device('cpu'))
+# map_location=torch.device('cpu')
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cpu")
+myModel = myModel.to(device)
+## Inference
+max_len = 800
 
-# correct_prediction = 0
-# total_prediction = 0
+correct_prediction = 0
+total_prediction = 0
 
-# with torch.no_grad():
-#     for inputs_np in seg_signal:
+with torch.no_grad():
+    for inputs_np in seg_signal:
 
         
-#         inputs_np = pad_trunc(inputs_np, max_len)
+        inputs_np = pad_trunc(inputs_np, max_len)
         
-#         inputs = convert_to_spec(inputs_np)
-#         inputs = inputs.unsqueeze(0)
-#         # Get the input features and target labels, and put them on the GPU
+        inputs = convert_to_spec(inputs_np)
+        inputs = inputs.unsqueeze(0)
+        # Get the input features and target labels, and put them on the GPU
 
-#         # Normalize the inputs
-#         inputs_m, inputs_s = inputs.mean(), inputs.std()
-#         inputs = (inputs - inputs_m) / inputs_s
+        # Normalize the inputs
+        inputs_m, inputs_s = inputs.mean(), inputs.std()
+        inputs = (inputs - inputs_m) / inputs_s
+        inputs = inputs.to(device)
+        # Get predictions
+        outputs = myModel(inputs)
 
-#         # Get predictions
-#         outputs = myModel(inputs)
-
-#         # Get the predicted class with the highest score
-#         _, prediction = torch.max(outputs, 1)
+        # Get the predicted class with the highest score
+        _, prediction = torch.max(outputs, 1)
         
-#         labels_np = 0
-#         prediction_np = prediction.cpu().numpy()
-#         print(prediction_np)
-#         # Count of predictions that matched the target label
-#         correct_prediction += (prediction == torch.tensor([0])).sum().item()
-#         total_prediction += prediction.shape[0]
+        labels_np = 0
+        prediction_np = prediction.cpu().numpy()
+        print(prediction_np)
+        # Count of predictions that matched the target label
+        correct_prediction += (prediction == torch.tensor([0]).to(device)).sum().item()
+        total_prediction += prediction.shape[0]
 
 
-# print(correct_prediction/total_prediction)
+print(correct_prediction/total_prediction)
 
-# print(len(seg_signal))
-# for i in range(len(seg_signal)):
-#     import matplotlib.pyplot as plt
-#     plt.plot(seg_signal[i])
-#     plt.show()
+print(len(seg_signal))
+for i in range(len(seg_signal)):
+    import matplotlib.pyplot as plt
+    plt.plot(seg_signal[i])
+    plt.show()
 # Segmentation based on frequency 
 
 
 
-## Signal Preprocessing Example
+# Signal Preprocessing Example
 
 
 

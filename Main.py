@@ -7,16 +7,17 @@ from IMUClassifier import IMUClassifier
 from IMUDataset import IMUDS
 from SENet import SENet
 from MobileNetV2 import MobileNetV2
+from DenseNet import DenseNet
 from ResNet import resnet18
 from TrainUtil import training, inference
 from data_loader import load_acc_data_with_label, get_corresponding_gyr_path
 from read_data import noise_computation
 
 if __name__ == "__main__":
-    paths = ["files_train/signal_data/files_0", "files_train/signal_data/files_1", "files_train/signal_data/files_2", 
-    "files_train/signal_data/files_3", "files_train/signal_data/files_4", "files_train/signal_data/files_5", 
-    "files_train/signal_data/files_6", "files_train/signal_data/files_7", "files_train/signal_data/files_8", 
-    "files_train/signal_data/files_9"]
+    paths = ["files_train/signal_data_new/files_0", "files_train/signal_data_new/files_1", "files_train/signal_data_new/files_2", 
+    "files_train/signal_data_new/files_3", "files_train/signal_data_new/files_4", "files_train/signal_data_new/files_5", 
+    "files_train/signal_data_new/files_6", "files_train/signal_data_new/files_7", "files_train/signal_data_new/files_8", 
+    "files_train/signal_data_new/files_9"]
 
     samples = []
     labels = []
@@ -44,8 +45,8 @@ if __name__ == "__main__":
     train_ds, val_ds = random_split(imu_ds, [num_train, num_val])
 
     # Create training and validation data loaders
-    train_dl = torch.utils.data.DataLoader(train_ds, batch_size=8, shuffle=True)
-    val_dl = torch.utils.data.DataLoader(val_ds, batch_size=8, shuffle=False)
+    train_dl = torch.utils.data.DataLoader(train_ds, batch_size=16, shuffle=True)
+    val_dl = torch.utils.data.DataLoader(val_ds, batch_size=16, shuffle=False)
 
     # set up model
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -53,11 +54,13 @@ if __name__ == "__main__":
 
     # myModel = IMUClassifier()
     # Use SENet
-    myModel = SENet()
+    # myModel = DenseNet(input_channel=1, n_classes=10, 
+    #         growthRate=12, depth=20, reduction=0.5, bottleneck=True)
+    myModel = torch.load("model/dense_net.pth")
     myModel = myModel.to(device)
 
     # Training Model
-    num_epochs = 20
+    num_epochs = 30
     print("start training")
     training(myModel, train_dl, val_dl, num_epochs)
 
@@ -65,4 +68,4 @@ if __name__ == "__main__":
     correlation_matrix = inference(myModel, val_dl, is_correlation=True)
     print(correlation_matrix)
 
-    torch.save(myModel,"model/se_net.pth")
+    torch.save(myModel,"model/dense_net.pth")
