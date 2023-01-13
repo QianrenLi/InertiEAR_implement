@@ -1,0 +1,446 @@
+error_data:  files_individual/files_2_4_6_8/acc_1_6_227.txt
+error_data:  files_individual/files_2_4_6_8/acc_1_6_224.txt
+error_data:  files_individual/files_2_4_6_8/acc_1_6_352.txt
+error_data:  files_individual/files_2_4_6_8/acc_1_6_300.txt
+error_data:  files_individual/files_2_4_6_8/acc_1_6_257.txt
+error_data:  files_individual/files_2_4_6_8/acc_1_8_6.txt
+error_data:  files_individual/files_2_4_6_8/acc_1_6_247.txt
+error_data:  files_individual/files_2_4_6_8/acc_1_4_113.txt
+error_data:  files_individual/files_2_4_6_8/acc_1_8_97.txt
+error_data:  files_individual/files_2_4_6_8/acc_1_8_110.txt
+error_data:  files_individual/files_2_4_6_8/acc_1_8_87.txt
+error_data:  files_individual/files_2_4_6_8/acc_1_6_277.txt
+error_data:  files_individual/files_2_4_6_8/acc_1_8_5.txt
+error_data:  files_individual/files_0_1/acc_1_1_107.txt
+error_data:  files_individual/files_0_1/acc_1_1_109.txt
+error_data:  files_individual/files_0_1/acc_1_1_110.txt
+error_data:  files_individual/files_0_1/acc_1_1_102.txt
+error_data:  files_individual/files_0_1/acc_1_1_105.txt
+error_data:  files_individual/files_0_1/acc_1_1_101.txt
+error_data:  files_individual/files_0_1/acc_1_1_106.txt
+error_data:  files_individual/files_0_1/acc_1_1_108.txt
+error_data:  files_individual/files_0_1/acc_1_1_103.txt
+error_data:  files_individual/files_0_1/acc_1_1_104.txt
+error_data:  files_individual/files_3_5_7_9/acc_1_5_159.txt
+error_data:  files_individual/files_3_5_7_9/acc_1_3_5.txt
+error_data:  files_individual/files_3_5_7_9/acc_1_3_8.txt
+                                       relative_path  classID
+0  [files_individual/files_2_4_6_8/acc_1_2_77.txt...        2
+1  [files_individual/files_2_4_6_8/acc_1_8_52.txt...        8
+2  [files_individual/files_2_4_6_8/acc_1_8_67.txt...        8
+3  [files_individual/files_2_4_6_8/acc_1_2_332.tx...        2
+4  [files_individual/files_2_4_6_8/acc_1_4_183.tx...        4
+cuda:0
+start training
+[1,     1] loss: 0.115
+[1,    21] loss: 2.284
+[1,    41] loss: 2.250
+[1,    61] loss: 2.227
+[1,    81] loss: 2.228
+[1,   101] loss: 2.180
+[1,   121] loss: 2.202
+[1,   141] loss: 2.170
+[1,   161] loss: 2.008
+[1,   181] loss: 2.001
+[1,   201] loss: 1.998
+[1,   221] loss: 2.078
+[1,   241] loss: 1.965
+[1,   261] loss: 2.083
+Epoch: 0, Loss: 2.11761, Accuracy: 0.23
+Accuracy: 0.32, Total items: 560
+[2,     1] loss: 0.102
+[2,    21] loss: 2.056
+[2,    41] loss: 2.027
+[2,    61] loss: 2.086
+[2,    81] loss: 2.112
+[2,   101] loss: 1.958
+[2,   121] loss: 2.028
+[2,   141] loss: 1.982
+[2,   161] loss: 2.001
+[2,   181] loss: 2.055
+[2,   201] loss: 2.028
+[2,   221] loss: 1.977
+[2,   241] loss: 2.128
+[2,   261] loss: 1.939
+Epoch: 1, Loss: 2.02445, Accuracy: 0.28
+Accuracy: 0.32, Total items: 560
+[3,     1] loss: 0.091
+[3,    21] loss: 2.014
+[3,    41] loss: 2.012
+[3,    61] loss: 2.065
+[3,    81] loss: 2.055
+[3,   101] loss: 2.082
+[3,   121] loss: 2.010
+[3,   141] loss: 1.960
+[3,   161] loss: 2.025
+[3,   181] loss: 1.985
+[3,   201] loss: 2.049
+[3,   221] loss: 1.905
+[3,   241] loss: 1.949
+[3,   261] loss: 1.910
+Epoch: 2, Loss: 1.99499, Accuracy: 0.30
+Accuracy: 0.30, Total items: 560
+[4,     1] loss: 0.110
+[4,    21] loss: 2.097
+[4,    41] loss: 1.998
+[4,    61] loss: 1.961
+[4,    81] loss: 1.990
+[4,   101] loss: 2.021
+[4,   121] loss: 1.988
+[4,   141] loss: 1.940
+[4,   161] loss: 1.936
+[4,   181] loss: 1.894
+[4,   201] loss: 1.975
+[4,   221] loss: 1.976
+[4,   241] loss: 2.041
+[4,   261] loss: 2.019
+Epoch: 3, Loss: 1.98670, Accuracy: 0.29
+Accuracy: 0.29, Total items: 560
+[5,     1] loss: 0.099
+[5,    21] loss: 1.916
+[5,    41] loss: 1.892
+[5,    61] loss: 1.971
+[5,    81] loss: 1.924
+[5,   101] loss: 2.040
+[5,   121] loss: 2.110
+[5,   141] loss: 1.905
+[5,   161] loss: 1.918
+[5,   181] loss: 2.058
+[5,   201] loss: 1.980
+[5,   221] loss: 1.924
+[5,   241] loss: 1.911
+[5,   261] loss: 1.948
+Epoch: 4, Loss: 1.96614, Accuracy: 0.31
+Accuracy: 0.33, Total items: 560
+[6,     1] loss: 0.121
+[6,    21] loss: 2.008
+[6,    41] loss: 2.032
+[6,    61] loss: 1.949
+[6,    81] loss: 1.930
+[6,   101] loss: 2.061
+[6,   121] loss: 1.912
+[6,   141] loss: 1.829
+[6,   161] loss: 1.971
+[6,   181] loss: 1.964
+[6,   201] loss: 1.823
+[6,   221] loss: 1.829
+[6,   241] loss: 1.966
+[6,   261] loss: 2.011
+Epoch: 5, Loss: 1.94447, Accuracy: 0.31
+Accuracy: 0.33, Total items: 560
+[7,     1] loss: 0.092
+[7,    21] loss: 1.913
+[7,    41] loss: 1.934
+[7,    61] loss: 1.978
+[7,    81] loss: 1.948
+[7,   101] loss: 1.946
+[7,   121] loss: 2.041
+[7,   141] loss: 1.899
+[7,   161] loss: 1.885
+[7,   181] loss: 1.872
+[7,   201] loss: 1.906
+[7,   221] loss: 1.750
+[7,   241] loss: 1.906
+[7,   261] loss: 1.756
+Epoch: 6, Loss: 1.90362, Accuracy: 0.33
+Accuracy: 0.25, Total items: 560
+[8,     1] loss: 0.096
+[8,    21] loss: 2.084
+[8,    41] loss: 2.079
+[8,    61] loss: 1.832
+[8,    81] loss: 1.776
+[8,   101] loss: 1.858
+[8,   121] loss: 1.849
+[8,   141] loss: 1.771
+[8,   161] loss: 1.813
+[8,   181] loss: 1.814
+[8,   201] loss: 1.801
+[8,   221] loss: 1.606
+[8,   241] loss: 1.580
+[8,   261] loss: 1.916
+Epoch: 7, Loss: 1.81672, Accuracy: 0.37
+Accuracy: 0.37, Total items: 560
+[9,     1] loss: 0.086
+[9,    21] loss: 1.645
+[9,    41] loss: 1.650
+[9,    61] loss: 1.778
+[9,    81] loss: 1.581
+[9,   101] loss: 1.737
+[9,   121] loss: 1.519
+[9,   141] loss: 1.752
+[9,   161] loss: 1.650
+[9,   181] loss: 1.723
+[9,   201] loss: 1.542
+[9,   221] loss: 1.818
+[9,   241] loss: 1.551
+[9,   261] loss: 1.605
+Epoch: 8, Loss: 1.65382, Accuracy: 0.41
+Accuracy: 0.46, Total items: 560
+[10,     1] loss: 0.065
+[10,    21] loss: 1.670
+[10,    41] loss: 1.429
+[10,    61] loss: 1.595
+[10,    81] loss: 1.660
+[10,   101] loss: 1.536
+[10,   121] loss: 1.434
+[10,   141] loss: 1.560
+[10,   161] loss: 1.559
+[10,   181] loss: 1.591
+[10,   201] loss: 1.546
+[10,   221] loss: 1.594
+[10,   241] loss: 1.497
+[10,   261] loss: 1.473
+Epoch: 9, Loss: 1.54737, Accuracy: 0.45
+Accuracy: 0.49, Total items: 560
+[11,     1] loss: 0.058
+[11,    21] loss: 1.502
+[11,    41] loss: 1.528
+[11,    61] loss: 1.504
+[11,    81] loss: 1.572
+[11,   101] loss: 1.441
+[11,   121] loss: 1.348
+[11,   141] loss: 1.516
+[11,   161] loss: 1.504
+[11,   181] loss: 1.379
+[11,   201] loss: 1.435
+[11,   221] loss: 1.638
+[11,   241] loss: 1.431
+[11,   261] loss: 1.323
+Epoch: 10, Loss: 1.47032, Accuracy: 0.48
+Accuracy: 0.47, Total items: 560
+[12,     1] loss: 0.077
+[12,    21] loss: 1.410
+[12,    41] loss: 1.461
+[12,    61] loss: 1.550
+[12,    81] loss: 1.346
+[12,   101] loss: 1.281
+[12,   121] loss: 1.367
+[12,   141] loss: 1.286
+[12,   161] loss: 1.407
+[12,   181] loss: 1.358
+[12,   201] loss: 1.351
+[12,   221] loss: 1.388
+[12,   241] loss: 1.418
+[12,   261] loss: 1.356
+Epoch: 11, Loss: 1.38115, Accuracy: 0.51
+Accuracy: 0.48, Total items: 560
+[13,     1] loss: 0.040
+[13,    21] loss: 1.211
+[13,    41] loss: 1.487
+[13,    61] loss: 1.252
+[13,    81] loss: 1.402
+[13,   101] loss: 1.304
+[13,   121] loss: 1.156
+[13,   141] loss: 1.374
+[13,   161] loss: 1.210
+[13,   181] loss: 1.358
+[13,   201] loss: 1.247
+[13,   221] loss: 1.281
+[13,   241] loss: 1.362
+[13,   261] loss: 1.291
+Epoch: 12, Loss: 1.30229, Accuracy: 0.55
+Accuracy: 0.53, Total items: 560
+[14,     1] loss: 0.056
+[14,    21] loss: 1.328
+[14,    41] loss: 1.188
+[14,    61] loss: 1.185
+[14,    81] loss: 1.427
+[14,   101] loss: 1.184
+[14,   121] loss: 1.311
+[14,   141] loss: 1.146
+[14,   161] loss: 1.253
+[14,   181] loss: 1.075
+[14,   201] loss: 1.136
+[14,   221] loss: 1.267
+[14,   241] loss: 1.053
+[14,   261] loss: 1.041
+Epoch: 13, Loss: 1.20172, Accuracy: 0.57
+Accuracy: 0.54, Total items: 560
+[15,     1] loss: 0.098
+[15,    21] loss: 1.141
+[15,    41] loss: 0.993
+[15,    61] loss: 0.910
+[15,    81] loss: 1.002
+[15,   101] loss: 1.066
+[15,   121] loss: 1.129
+[15,   141] loss: 0.988
+[15,   161] loss: 1.194
+[15,   181] loss: 1.113
+[15,   201] loss: 1.215
+[15,   221] loss: 1.239
+[15,   241] loss: 1.127
+[15,   261] loss: 0.883
+Epoch: 14, Loss: 1.08852, Accuracy: 0.60
+Accuracy: 0.55, Total items: 560
+[16,     1] loss: 0.052
+[16,    21] loss: 1.038
+[16,    41] loss: 1.163
+[16,    61] loss: 1.002
+[16,    81] loss: 1.140
+[16,   101] loss: 1.209
+[16,   121] loss: 0.920
+[16,   141] loss: 1.006
+[16,   161] loss: 1.010
+[16,   181] loss: 1.032
+[16,   201] loss: 0.948
+[16,   221] loss: 1.009
+[16,   241] loss: 0.968
+[16,   261] loss: 0.841
+Epoch: 15, Loss: 1.02371, Accuracy: 0.62
+Accuracy: 0.54, Total items: 560
+[17,     1] loss: 0.040
+[17,    21] loss: 0.917
+[17,    41] loss: 0.950
+[17,    61] loss: 0.994
+[17,    81] loss: 0.950
+[17,   101] loss: 0.948
+[17,   121] loss: 0.761
+[17,   141] loss: 0.803
+[17,   161] loss: 1.083
+[17,   181] loss: 0.954
+[17,   201] loss: 0.946
+[17,   221] loss: 1.015
+[17,   241] loss: 0.905
+[17,   261] loss: 0.957
+Epoch: 16, Loss: 0.93235, Accuracy: 0.66
+Accuracy: 0.57, Total items: 560
+[18,     1] loss: 0.032
+[18,    21] loss: 0.668
+[18,    41] loss: 0.724
+[18,    61] loss: 0.890
+[18,    81] loss: 0.783
+[18,   101] loss: 0.771
+[18,   121] loss: 0.790
+[18,   141] loss: 0.727
+[18,   161] loss: 0.770
+[18,   181] loss: 0.783
+[18,   201] loss: 0.706
+[18,   221] loss: 0.865
+[18,   241] loss: 0.816
+[18,   261] loss: 0.725
+Epoch: 17, Loss: 0.77531, Accuracy: 0.72
+Accuracy: 0.57, Total items: 560
+[19,     1] loss: 0.040
+[19,    21] loss: 0.713
+[19,    41] loss: 0.765
+[19,    61] loss: 0.686
+[19,    81] loss: 0.635
+[19,   101] loss: 0.544
+[19,   121] loss: 0.560
+[19,   141] loss: 0.665
+[19,   161] loss: 0.708
+[19,   181] loss: 0.507
+[19,   201] loss: 0.635
+[19,   221] loss: 0.787
+[19,   241] loss: 0.716
+[19,   261] loss: 0.798
+Epoch: 18, Loss: 0.66705, Accuracy: 0.75
+Accuracy: 0.56, Total items: 560
+[20,     1] loss: 0.022
+[20,    21] loss: 0.512
+[20,    41] loss: 0.538
+[20,    61] loss: 0.691
+[20,    81] loss: 0.626
+[20,   101] loss: 0.542
+[20,   121] loss: 0.525
+[20,   141] loss: 0.572
+[20,   161] loss: 0.452
+[20,   181] loss: 0.444
+[20,   201] loss: 0.657
+[20,   221] loss: 0.534
+[20,   241] loss: 0.529
+[20,   261] loss: 0.576
+Epoch: 19, Loss: 0.54923, Accuracy: 0.80
+Accuracy: 0.60, Total items: 560
+[21,     1] loss: 0.006
+[21,    21] loss: 0.403
+[21,    41] loss: 0.322
+[21,    61] loss: 0.331
+[21,    81] loss: 0.418
+[21,   101] loss: 0.355
+[21,   121] loss: 0.298
+[21,   141] loss: 0.341
+[21,   161] loss: 0.405
+[21,   181] loss: 0.439
+[21,   201] loss: 0.430
+[21,   221] loss: 0.472
+[21,   241] loss: 0.497
+[21,   261] loss: 0.386
+Epoch: 20, Loss: 0.39531, Accuracy: 0.86
+Accuracy: 0.57, Total items: 560
+[22,     1] loss: 0.010
+[22,    21] loss: 0.278
+[22,    41] loss: 0.243
+[22,    61] loss: 0.270
+[22,    81] loss: 0.295
+[22,   101] loss: 0.243
+[22,   121] loss: 0.232
+[22,   141] loss: 0.329
+[22,   161] loss: 0.299
+[22,   181] loss: 0.325
+[22,   201] loss: 0.228
+[22,   221] loss: 0.382
+[22,   241] loss: 0.251
+[22,   261] loss: 0.363
+Epoch: 21, Loss: 0.29854, Accuracy: 0.90
+Accuracy: 0.59, Total items: 560
+[23,     1] loss: 0.010
+[23,    21] loss: 0.185
+[23,    41] loss: 0.203
+[23,    61] loss: 0.193
+[23,    81] loss: 0.192
+[23,   101] loss: 0.168
+[23,   121] loss: 0.191
+[23,   141] loss: 0.194
+[23,   161] loss: 0.149
+[23,   181] loss: 0.209
+[23,   201] loss: 0.175
+[23,   221] loss: 0.257
+[23,   241] loss: 0.181
+[23,   261] loss: 0.190
+Epoch: 22, Loss: 0.19453, Accuracy: 0.93
+Accuracy: 0.58, Total items: 560
+[24,     1] loss: 0.003
+[24,    21] loss: 0.132
+[24,    41] loss: 0.110
+[24,    61] loss: 0.138
+[24,    81] loss: 0.123
+[24,   101] loss: 0.160
+[24,   121] loss: 0.152
+[24,   141] loss: 0.134
+[24,   161] loss: 0.071
+[24,   181] loss: 0.131
+[24,   201] loss: 0.134
+[24,   221] loss: 0.105
+[24,   241] loss: 0.095
+[24,   261] loss: 0.138
+Epoch: 23, Loss: 0.12430, Accuracy: 0.96
+Accuracy: 0.59, Total items: 560
+[25,     1] loss: 0.001
+[25,    21] loss: 0.093
+[25,    41] loss: 0.099
+[25,    61] loss: 0.071
+[25,    81] loss: 0.082
+[25,   101] loss: 0.087
+[25,   121] loss: 0.055
+[25,   141] loss: 0.115
+[25,   161] loss: 0.077
+[25,   181] loss: 0.059
+[25,   201] loss: 0.069
+[25,   221] loss: 0.059
+[25,   241] loss: 0.113
+[25,   261] loss: 0.129
+Epoch: 24, Loss: 0.08386, Accuracy: 0.98
+Accuracy: 0.59, Total items: 560
+Finished Training
+Accuracy: 0.59, Total items: 560
+[[72.  5.  6.  4.  1.  7.  0.  4.  0.  2.]
+ [ 3. 60. 10.  1.  3.  0.  0.  0.  5. 14.]
+ [ 8. 12. 60.  2.  4.  5.  0.  2.  2.  1.]
+ [ 3.  1.  5. 16.  6.  5.  0.  1.  1.  2.]
+ [ 3.  2.  3.  2. 19.  3.  2.  0.  1.  6.]
+ [ 4.  0.  6.  3.  1. 12.  3.  2.  0.  2.]
+ [ 0.  0.  1.  0.  0.  5. 22.  4.  0.  1.]
+ [ 4.  0.  2.  0.  0.  9.  3. 24.  0.  2.]
+ [ 0.  1.  4.  0.  0.  0.  0.  0. 33.  1.]
+ [ 4.  8.  2.  4.  2.  0.  1.  1.  4. 11.]]
