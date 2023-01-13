@@ -14,10 +14,14 @@ from data_loader import load_acc_data_with_label, get_corresponding_gyr_path
 from read_data import noise_computation
 
 if __name__ == "__main__":
-    paths = ["files_train/signal_data_new/files_0", "files_train/signal_data_new/files_1", "files_train/signal_data_new/files_2", 
-    "files_train/signal_data_new/files_3", "files_train/signal_data_new/files_4", "files_train/signal_data_new/files_5", 
-    "files_train/signal_data_new/files_6", "files_train/signal_data_new/files_7", "files_train/signal_data_new/files_8", 
-    "files_train/signal_data_new/files_9"]
+    # paths = ["files_train/signal_data_new/files_0", "files_train/signal_data_new/files_1", "files_train/signal_data_new/files_2", 
+    # "files_train/signal_data_new/files_3", "files_train/signal_data_new/files_4", "files_train/signal_data_new/files_5", 
+    # "files_train/signal_data_new/files_6", "files_train/signal_data_new/files_7", "files_train/signal_data_new/files_8", 
+    # "files_train/signal_data_new/files_9"]
+    paths = ["files_train/signal_data_type_1/files_0", "files_train/signal_data_type_1/files_1", "files_train/signal_data_type_1/files_2", 
+    "files_train/signal_data_type_1/files_3", "files_train/signal_data_type_1/files_4", "files_train/signal_data_type_1/files_5", 
+    "files_train/signal_data_type_1/files_6", "files_train/signal_data_type_1/files_7", "files_train/signal_data_type_1/files_8", 
+    "files_train/signal_data_type_1/files_9"]
 
     samples = []
     labels = []
@@ -56,11 +60,12 @@ if __name__ == "__main__":
     # Use SENet
     # myModel = DenseNet(input_channel=1, n_classes=10, 
     #         growthRate=12, depth=20, reduction=0.5, bottleneck=True)
-    myModel = torch.load("model/dense_net.pth")
+    # myModel = torch.load("model/dense_net.pth")
+    myModel = SENet()
     myModel = myModel.to(device)
 
     # Training Model
-    num_epochs = 30
+    num_epochs = 25
     print("start training")
     training(myModel, train_dl, val_dl, num_epochs)
 
@@ -68,4 +73,4 @@ if __name__ == "__main__":
     correlation_matrix = inference(myModel, val_dl, is_correlation=True)
     print(correlation_matrix)
 
-    torch.save(myModel,"model/dense_net.pth")
+    torch.save(myModel,"model/se_type_2_net.pth")

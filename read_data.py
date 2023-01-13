@@ -36,6 +36,10 @@ class AudioUtil():
         spec = transforms.AmplitudeToDB(top_db=top_db)(spec)
         return (spec)
 
+def line_fit(acc_t):
+    _x = np.arange(0,len(acc_t))
+    z = np.polyfit(_x,acc_t,1)
+    return z[0],z[1]
 
 def pre_processing_example(isMel_spec=True):
     aud = AudioUtil.open('0_01_0.wav')
@@ -170,12 +174,14 @@ def high_frequency_suppression(clean_sig,fs):
     clean_sig = signal_filter(clean_sig, fs= fs, fstop=80, btype='highpass')
     return clean_sig
 
-def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,acc_noise, gyr_noise):
+def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,acc_noise, gyr_noise, fs = 800):
     '''
     acc_t_idx : (,2) format
     '''
     acc_s = []
     gyr_s = []
+
+
     acc_t_idx = acc_t_idx.astype('int')
     gyr_t_idx = gyr_t_idx.astype('int')
 
@@ -222,14 +228,15 @@ def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,acc_nois
     for i in range(len(acc_s)):
         try:
             _, t_s = concate_time(acc_t[acc_t_idx[i, 0]:acc_t_idx[i, 1]], acc_s[i],
-                                  gyr_t[gyr_t_idx[i, 0]:gyr_t_idx[i, 1]],
-                                  gyr_s[i])
+                                    gyr_t[gyr_t_idx[i, 0]:gyr_t_idx[i, 1]],
+                                    gyr_s[i])
             # import matplotlib.pyplot as plt
             # plt.plot(t_s)
             # plt.title("Concated Signal")
             # plt.show()
             # High frequency suppression
-            t_s = high_frequency_suppression(t_s, 800)
+            t_s = high_frequency_suppression(t_s, fs)
+            # t_s = signal_filter(t_s, fs= fs, fstop=20, btype='lowpass')
             # print(t_s)
             out_signal.append(t_s)
         except:
@@ -238,18 +245,32 @@ def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,acc_nois
     return out_signal
 
 
-def concate_time(acc_t, acc_s, gyr_t, gyr_s):
-    base_time_stamp = min(np.min(acc_t), np.min(gyr_t))
-    acc_t = acc_t - base_time_stamp
-    gyr_t = gyr_t - base_time_stamp
-    _s = np.concatenate((acc_s, gyr_s))
-    _t = np.concatenate((acc_t, gyr_t))
-    _idx = np.argsort(_t)
-    # print(_idx)
-    t = _t[_idx]
-    s = _s[_idx]
-    # return acc_t,acc_s
-    return t, s
+def concate_time(acc_t, acc_s, gyr_t, gyr_s,type = 2):
+    if type == 1:
+        s = np.zeros(len(acc_s)+len(gyr_t))
+        _array = acc_s if len(acc_s) > len(gyr_s) else gyr_s
+        minimum_length = min(len(acc_s),len(gyr_s))
+        maximum_length = max(len(acc_s),len(gyr_s))
+        for i in range(minimum_length):
+            s[2*i] = acc_s[i]
+            s[2*i+1] = gyr_s[i]
+        for i in range(minimum_length,maximum_length):
+            s[i + minimum_length] = _array[i]
+        return acc_t,s
+    elif type == 2:
+        base_time_stamp = min(np.min(acc_t), np.min(gyr_t))
+        acc_t = acc_t - base_time_stamp
+        gyr_t = gyr_t - base_time_stamp
+        _s = np.concatenate((acc_s, gyr_s))
+        _t = np.concatenate((acc_t, gyr_t))
+        _idx = np.argsort(_t)
+        # print(_idx)
+        t = _t[_idx]
+        s = _s[_idx]
+        return t, s
+    else:
+        return acc_t,acc_s
+
 
 
 def signal_filter(data, fs, fstop, btype):
@@ -555,9 +576,9 @@ class segmentation_handle():
         result_signal = normalization(acc_s_intp,1) + 0.5 *  normalization(gyr_s_intp,1)
         
         multiplied_signal = result_signal * result_signal
-        
-        multiplied_signal = median_filter(multiplied_signal,7)
         # multiplied_signal = gyr_s_intp * acc_s_intp 
+        multiplied_signal = median_filter(multiplied_signal,7)
+
         # f, t, Zxx = scipy.signal.stft(multiplied_signal,fs = 400)
         # import matplotlib.pyplot as plt
         # plt.imshow(np.log2(abs(Zxx)),origin = 'lower',aspect='auto')
@@ -579,7 +600,7 @@ class segmentation_handle():
             segmentation_idx = np.reshape(segmentation_idx/(oFs/self.Fs),(-1,2))
         else:
             # signal preprocessing
-            multiplied_signal_f = signal_filter(multiplied_signal, fs=oFs, fstop=50, btype='highpass')
+            multiplied_signal_f = signal_filter(multiplied_signal, fs=oFs, fstop=100, btype='highpass')
             multiplied_signal_f = signal.hilbert(multiplied_signal_f)
             power_signal = energy_calculation(np.abs(multiplied_signal_f), Energy_WIN)
             if is_auto_threshold:
@@ -592,6 +613,8 @@ class segmentation_handle():
             segmentation_idx = segmentation_correct(np.log(power_signal + 1), threshold, Energy_WIN, Duration_WIN, Expanding_Range * oFs)
             segmentation_time = acc_t_intp[segmentation_idx]
             segmentation_idx = np.reshape(segmentation_idx/(oFs/self.Fs),(-1,2))
+
+
             # import matplotlib.pyplot as plt
             # plt.subplot(2,1,2)
             # plt.plot(np.log(power_signal + 1))
@@ -669,18 +692,30 @@ def data_processing(acc_path,gyr_path,file_directory,label):
     noise_acc, noise_gyr = noise_computation("./files_individual/noise/acc_1_999_999.txt", "./files_individual/noise/gyr_1_999_999.txt")
     acc_t, acc_xyz = signal_read(acc_path)
     gyr_t, gyr_xyz = signal_read(gyr_path)
+    Fs = 400
+    acc_xyz = acc_xyz[int(Fs):int(len(acc_xyz) - Fs),:]
+    gyr_xyz = gyr_xyz[int(Fs):int(len(gyr_xyz) - Fs),:]
+    acc_t   = acc_t[int(Fs):int(len(acc_t) - Fs)]
+    gyr_t  = gyr_t[int(Fs):int(len(gyr_t)- Fs)]
+    _temp = np.arange(0,len(acc_t))
+    w,b = line_fit(acc_t) 
+    acc_t = w * _temp + b
+
+    _temp = np.arange(0,len(gyr_t))
+    w,b = line_fit(gyr_t) 
+    gyr_t = w * _temp + b
+
     acc_xyz = remove_mean_value(acc_xyz)
     gyr_xyz = remove_mean_value(gyr_xyz)
     
     h_seg = segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, Fs = 400)
     
-    segmentation_idx = h_seg.segmentation(oFs = 2000, noise_acc = noise_acc, noise_gyr = noise_gyr,
-                                                            is_plot= False,non_linear_factor= 1000,filter_type= 0,
-                                                            is_test = False,is_auto_threshold = True)
+    segmentation_time,segmentation_idx =h_seg.segmentation(oFs = 2000, noise_acc = noise_acc, noise_gyr = noise_gyr,is_plot= False,non_linear_factor= 1000,filter_type= 0,
+Energy_WIN = 200,Duration_WIN = 500,Expanding_Range = 0.2,is_test = True,is_auto_threshold = True)
     
-    # acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
+    acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
     
-    seg_signal = pre_processing(acc_xyz, gyr_xyz, segmentation_idx, segmentation_idx, acc_t, gyr_t,noise_acc,noise_gyr)
+    seg_signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,noise_acc,noise_gyr)
     import os
     voice_number = 0
     for cur_file_name in os.listdir(file_directory):
@@ -743,7 +778,7 @@ def read_data_from_path(path):
 
 if __name__ == "__main__":
     in_dir_path = "files_train/original_data_new"
-    out_dir_path = "files_train/signal_data_new"
+    out_dir_path = "files_train/signal_data_type_1"
     for file_name in os.listdir(in_dir_path):
         if file_name.count("acc"):
             acc_file = file_name
