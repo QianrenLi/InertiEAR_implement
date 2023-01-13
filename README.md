@@ -4,6 +4,8 @@
 
 We implement an Android App to collect data, the app is called SpyApp.
 
+The source code of app is https://github.com/EdisonE3/IMU-Collect-App
+
 The code of this app we are put into spyapp.zip.
 
 The data we used to train is placed in the `raw` directory.
