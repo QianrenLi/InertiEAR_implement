@@ -68,3 +68,4 @@ where the `acc_xyz, gyr_xyz,acc_t,gyr_t` should be read by `read_data.signal_rea
 
 ## Reference
 [1] https://github.com/Mayurji/Image-Classification-PyTorch/blob/main/DenseNet.py
+[2] https://github.com/soerenab/AudioMNIST
