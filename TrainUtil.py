@@ -53,8 +53,8 @@ def training(model, train_dl, val_dl, num_epochs):
             correct_prediction += (prediction == labels).sum().item()
             total_prediction += prediction.shape[0]
 
-            if i % 50 == 0:  # print every 50 mini-batches
-                print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 10))
+            if i % 20 == 0:  # print every 50 mini-batches
+                print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, running_loss / 20))
                 running_loss = 0
 
         # Print stats at the end of the epoch
@@ -63,7 +63,7 @@ def training(model, train_dl, val_dl, num_epochs):
         acc = correct_prediction / total_prediction
         print(f'Epoch: {epoch}, Loss: {avg_loss:.5f}, Accuracy: {acc:.2f}')
         # Inference
-        inference(model, val_dl)
+        print(inference(model, val_dl, is_correlation=True))
 
     print('Finished Training')
 

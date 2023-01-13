@@ -1,5 +1,6 @@
 from torch.utils.data import DataLoader, Dataset, random_split
 import torchaudio
+import numpy as np
 
 # ----------------------------
 # IMU Dataset
@@ -30,9 +31,7 @@ class IMUDS(Dataset):
         # Get the Class ID
         class_id = self.df.loc[idx, 'classID']
 
-        acc_path = imu_data_files[0]
-        gyr_path = imu_data_files[1]
-        signal = generate_signal(acc_path, gyr_path, self.acc_noise, self.gyr_noise)
+        signal = np.load(imu_data_files)
         signal = pad_trunc(signal, self.max_len)
         sgram = convert_to_spec(signal)
 
