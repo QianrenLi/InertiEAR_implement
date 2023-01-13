@@ -39,8 +39,8 @@ noise_acc, noise_gyr = rd.noise_computation("./files_individual/noise/acc_1_999_
 # acc_path = "./files_0_4/files/acc_1_0_30.txt"
 # gyr_path = "./files_0_4/files/gyr_1_0_30.txt"
 
-acc_path = "./file_test/speed_test/acc_1500_0.txt"
-gyr_path = "./file_test/speed_test/gyr_1500_0.txt"
+acc_path = "./files_train/original_data_new/acc_1_2_0.txt"
+gyr_path = "./files_train/original_data_new/gyr_1_2_0.txt"
 # reference_point = np.linspace( 8300, 744000, 201)
 # Original Signal Display
 acc_t, acc_xyz = rd.signal_read(acc_path)

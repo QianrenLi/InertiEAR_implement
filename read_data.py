@@ -220,16 +220,20 @@ def pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,acc_nois
     
     out_signal = []
     for i in range(len(acc_s)):
-        _, t_s = concate_time(acc_t[acc_t_idx[i, 0]:acc_t_idx[i, 1]], acc_s[i], gyr_t[gyr_t_idx[i, 0]:gyr_t_idx[i, 1]],
-                              gyr_s[i])
-        # import matplotlib.pyplot as plt
-        # plt.plot(t_s)
-        # plt.title("Concated Signal")
-        # plt.show()
-        # High frequency suppression
-        t_s = high_frequency_suppression(t_s,800)
-        # print(t_s)
-        out_signal.append(t_s)
+        try:
+            _, t_s = concate_time(acc_t[acc_t_idx[i, 0]:acc_t_idx[i, 1]], acc_s[i],
+                                  gyr_t[gyr_t_idx[i, 0]:gyr_t_idx[i, 1]],
+                                  gyr_s[i])
+            # import matplotlib.pyplot as plt
+            # plt.plot(t_s)
+            # plt.title("Concated Signal")
+            # plt.show()
+            # High frequency suppression
+            t_s = high_frequency_suppression(t_s, 800)
+            # print(t_s)
+            out_signal.append(t_s)
+        except:
+            print("concate error")
 
     return out_signal
 
@@ -624,7 +628,7 @@ class segmentation_handle():
 
         # Paper filtering
         # power_signal = signal_filter(multiplied_signal,fs=oFs,fstop= 20, btype='lowpass')
-        return segmentation_time
+        return segmentation_idx
 
     def time2index(self, segmentation_time):
         acc_t = self.acc_t
@@ -670,19 +674,22 @@ def data_processing(acc_path,gyr_path,file_directory,label):
     
     h_seg = segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, Fs = 400)
     
-    segmentation_time = h_seg.segmentation(oFs = 2000, noise_acc = noise_acc, noise_gyr = noise_gyr,is_plot= False,non_linear_factor= 10000,filter_type= 0,Energy_WIN = 400,Duration_WIN = 500,Expanding_Range = 0.2)
+    segmentation_idx = h_seg.segmentation(oFs = 2000, noise_acc = noise_acc, noise_gyr = noise_gyr,
+                                                            is_plot= False,non_linear_factor= 1000,filter_type= 0,
+                                                            is_test = False,is_auto_threshold = True)
     
-    acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
+    # acc_t_idx, gyr_t_idx = h_seg.time2index(segmentation_time=segmentation_time)
     
-    seg_signal = pre_processing(acc_xyz, gyr_xyz, acc_t_idx, gyr_t_idx, acc_t, gyr_t,noise_acc,noise_gyr)
+    seg_signal = pre_processing(acc_xyz, gyr_xyz, segmentation_idx, segmentation_idx, acc_t, gyr_t,noise_acc,noise_gyr)
     import os
     voice_number = 0
     for cur_file_name in os.listdir(file_directory):
         if cur_file_name.startswith("signal"):
             _voice_number = int(cur_file_name.replace(".npy", "").replace("signal_", "").split("_")[2])
             voice_number = max(voice_number,_voice_number)
-    
+    print(len(seg_signal))
     for i in range(len(seg_signal)):
+        print("signal len: ", len(seg_signal[i]))
         np.save(("%ssignal_1_%d_%d") % (file_directory,label,i + voice_number + 1),seg_signal[i])
     
     # Use example
@@ -748,3 +755,18 @@ if __name__ == "__main__":
                 os.mkdir(out_dir_path_i)
             data_processing(acc_path=in_dir_path + "/" + acc_file, gyr_path=in_dir_path + "/" + gyr_file,
                             file_directory=out_dir_path_i + "/", label=label)
+
+    # max_signal_len = 0
+    # total_signal_len = 0
+    # count = 0
+    # for i in range(0, 10):
+    #     data_dir = out_dir_path + "/files_" + str(i)
+    #     for file_name in os.listdir(data_dir):
+    #         signal = np.load(data_dir + "/" + file_name)
+    #         cur_len = len(signal)
+    #         if cur_len > max_signal_len:
+    #             max_signal_len = cur_len
+    #         total_signal_len += cur_len
+    #         count += 1
+    #         print(str(i) + ": ", cur_len, " max_signal_len: ", max_signal_len,
+    #               " average_signal_len: ", total_signal_len / count, " count: ", count)

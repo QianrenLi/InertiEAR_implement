@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     # myModel = IMUClassifier()
     # Use SENet
-    myModel = MobileNetV2()
+    myModel = torch.load("model_good/new/mobile_net.pth")
     myModel = myModel.to(device)
 
     # Training Model
