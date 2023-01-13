@@ -45,12 +45,12 @@ noise_acc, noise_gyr = rd.noise_computation("./files_individual/noise/acc_1_999_
 # acc_path = "./files_0_4/files/acc_1_0_30.txt"
 # gyr_path = "./files_0_4/files/gyr_1_0_30.txt"
 
-acc_path = "files_train/original_data_new/acc_1_0_0.txt"
-gyr_path = "files_train/original_data_new/gyr_1_0_0.txt"
+acc_path = "file_test/final_test/acc_1_666_10.txt"
+gyr_path = "file_test/final_test/gyr_1_666_10.txt"
 
 # Auto factor 0.1358695652173913
-# acc_path = "file_test/speed_test/acc_1100_0.txt"
-# gyr_path = "file_test/speed_test/gyr_1100_0.txt"
+# acc_path = "file_test/final_test/acc_1_666_10.txt"
+# gyr_path = "file_test/final_test/gyr_1_666_10.txt"
 
 # Auto factor 0.3155339805825243
 # acc_path = "file_test/speed_test/acc_1300_0.txt"
@@ -118,7 +118,7 @@ h_seg = rd.segmentation_handle(acc_xyz, gyr_xyz, acc_t, gyr_t, Fs = 400)
 
 # print(segmentation_check(reference_point,segmentation_idx))
 segmentation_time,segmentation_idx = h_seg.segmentation(oFs = 2000, noise_acc = noise_acc, noise_gyr = noise_gyr,is_plot= True,non_linear_factor= 100000,filter_type= 0,
-Energy_WIN = 200,Duration_WIN = 500,Expanding_Range = 0.2,is_test = True,is_auto_threshold = True)
+Energy_WIN = 300,Duration_WIN = 500,Expanding_Range = 0.2,is_test = True,is_auto_threshold = True)
 
 # print(segmentation_check(reference_point,segmentation_idx))
 ##################### Segmentation Error ############
@@ -157,7 +157,10 @@ max_len = 900
 correct_prediction = 0
 total_prediction = 0
 
+test = [6,6,7,7,8,8,9,9]
+
 with torch.no_grad():
+    i = 0
     for inputs_np in seg_signal:
         # plt.plot(inputs_np)
         # plt.show()
@@ -182,8 +185,9 @@ with torch.no_grad():
         prediction_np = prediction.cpu().numpy()
         print(prediction_np)
         # Count of predictions that matched the target label
-        correct_prediction += (prediction == torch.tensor([0]).to(device)).sum().item()
+        correct_prediction += (prediction == torch.tensor([test[i]]).to(device)).sum().item()
         total_prediction += prediction.shape[0]
+        i += 1
 
 
 print(correct_prediction/total_prediction)

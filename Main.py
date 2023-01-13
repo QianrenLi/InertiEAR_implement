@@ -65,7 +65,7 @@ if __name__ == "__main__":
     myModel = myModel.to(device)
 
     # Training Model
-    num_epochs = 25
+    num_epochs = 15
     print("start training")
     training(myModel, train_dl, val_dl, num_epochs)
 
@@ -73,4 +73,4 @@ if __name__ == "__main__":
     correlation_matrix = inference(myModel, val_dl, is_correlation=True)
     print(correlation_matrix)
 
-    torch.save(myModel,"model/se_type_2_net.pth")
+    torch.save(myModel,"model/se_type_3_net.pth")
