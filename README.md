@@ -1,5 +1,30 @@
 # InertiEAR implementation
 
+## Data Collector:
+
+We implement an Android App to collect data, the app is called SpyApp.
+
+The code of this app we are put into spyapp.zip.
+
+The data we used to train is placed in the `raw` directory.
+
+Importing this project into Android Studio or IDEA, then you can compile it.
+
+After that, you can install this app on an android mobile phone and use it collect data.
+
+Open the app, click the right low icon into collect mode.
+
+Then you need to push the button `test` to collect data.
+
+The data format is shown as below:
+
+```
+103094561358952,0.32542386651039124,0.1782652884721756,10.971092224121094
+103094561372962,0.26081767678260803,0.19980068504810333,10.643275260925293
+103094562586243,0.14835500717163086,0.23808585107326508,10.059426307678223
+...
+```
+First column is time stamp, the following three columns are data collected from x, y and z axises from the mobile phone.
 
 ## Model Training
 + After data collect, use `mian` function in `read_data.py`
